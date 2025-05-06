@@ -7,3 +7,18 @@ The following python packages listed in `requirements.txt` are needed. Run the f
 ```
 pip install -r requirements.txt
 ```
+
+# Goals
+Subsampling:
+
+- uniform
+- uniform on chromosomes
+
+- random selection from a given subset of annotated mutations (Ensamble)
+- random selection from a given subset of annotated mutations (Ensamble) so that the mutations are uniformly distributed over the chromosomes.
+- random selection from a given subset of annotated mutations based on the functions (using the Ensamble classification: open-cromatine, enhancer, promoter)
+
+## TODO
+
+- More (memory) efficient import
+- GPU

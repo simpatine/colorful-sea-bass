@@ -181,7 +181,7 @@ subsample_ratio: float
 
         start_t = time.time()
         print("Loading features...", flush=True)
-        data = pd.read_csv(data_file, low_memory=False,
+        data = pd.read_csv(data_file, low_memory=True,
                            index_col=0,  # first column as index
                            header=0  # first row as header
                            ).astype(np.int8)

@@ -290,7 +290,7 @@ subsample_ratio: float
 
         self.dtrain.set_info(feature_weights=fw)
 
-    def fit(self, params=None, evals=None):
+    def fit(self, params=None, evals=None, cuda=False):
         if self.dtrain is None:
             raise Exception("Need to load training datasets first!")
 
@@ -321,12 +321,28 @@ subsample_ratio: float
             else:
                 evals = [(self.dtrain, "training"), (self.dvalidation, "validation")]
 
-        self.bst = xgb.train(params=params, dtrain=self.dtrain,
+        # use CUDA if available
+        if cuda:
+            params["device"] = "cuda"
+        try:
+            print(f"Trying with {params['device']}")
+            self.bst = xgb.train(params=params, dtrain=self.dtrain,
                              num_boost_round=self.num_trees,
                              evals=evals,
                              verbose_eval=5,
                              early_stopping_rounds=self.early_stopping
                              )
+            print(f"Done training accelerated with {params['device']}")
+        except:
+            print("Could not use CUDA device, falling back on CPU")
+            params["device"] = "cpu"
+            self.bst = xgb.train(params=params, dtrain=self.dtrain,
+                             num_boost_round=self.num_trees,
+                             evals=evals,
+                             verbose_eval=5,
+                             early_stopping_rounds=self.early_stopping
+                             )
+            print("Done on CPU")
 
         # update number of trees in case of early stopping
         self.num_trees = self.bst.num_boosted_rounds()
@@ -574,7 +590,7 @@ if __name__ == "__main__":
 
     for it in range(args.iterations):
         print(f"\n*** Iteration {it + 1} ***")
-        clf.fit()
+        clf.fit(cuda=True)
         clf.predict()
         clf.print_stats()
         clf.write_importance(f"importance-{it}")

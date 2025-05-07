@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name train-subsample-xgboost
-#SBATCH --output logs/train_gpu.log
-#SBATCH --error logs/train_gpu.err
+#SBATCH --output logs/train.log
+#SBATCH --error logs/train.err
 ##SBATCH --mail-user giovanni.gaio.1@studenti.unipd.it
 #SBATCH --mail-user simone.moretti.1@studenti.unipd.it
 #SBATCH --mail-type ALL

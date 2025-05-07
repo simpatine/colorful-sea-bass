@@ -175,3 +175,6 @@ cython_debug/
 
 # Sbatch logs
 logs/
+
+# Wherever simpatine saves datasets
+datasets/

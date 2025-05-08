@@ -68,6 +68,8 @@ def group_by_region(weights, gains, regions_folder):
         grouped_gains = gains.loc[list(common_strings), 0]
         grouped_counts = weights.loc[list(common_strings), 0]
 
+        if len(features) == 0: continue
+
         counts_dic[file] = len(common_strings) / len(features)
         weights_dic[file] = grouped_counts.sum() / total_counts
         gains_dic[file] = grouped_gains.sum() / total_gain
@@ -76,7 +78,7 @@ def group_by_region(weights, gains, regions_folder):
               f"{counts_dic[file] * 100: .2f} %\t"
               f"{weights_dic[file] * 100: .2f}%")
         if file == "broad.csv":
-            logging.info()
+            logging.info("\n")
 
     return regions_files, counts_dic, weights_dic, gains_dic
 
@@ -101,7 +103,7 @@ def data_ensemble(gains, data_ensemble_file):
         info_n_tissue["gain"] = ensemble.groupby("funct")["gain"].sum()
 
         logging.info(info_funct)
-        logging.info()
+        logging.info("\n")
         logging.info(info_n_tissue)
         return intersection_features, info_funct, info_n_tissue
     else:
@@ -115,9 +117,9 @@ class XGBoostVariant:
     best_it: int
     best_score: float
 
-    dtrain: xgb.DMatrix
+    dtrain: xgb.QuantileDMatrix
     dvalidation: xgb.DMatrix
-    dtest: xgb.DMatrix
+    dtest: xgb.QuantileDMatrix
 
     y_pred: ndarray
     y_test: ndarray
@@ -184,31 +186,31 @@ subsample_ratio: float
         train_set_file = self.train_set_file
 
         start_t = time.time()
-        logging.info("Loading features...", flush=True)
+        logging.info("Loading features...")
         data = pd.read_csv(data_file, low_memory=True,
                            index_col=0,  # first column as index
                            header=0  # first row as header
                            ).astype(np.int8)
         stop_t = time.time()
-        logging.info(f"Done in {stop_t - start_t : .2f} s.", flush=True)
+        logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
         if subsample_ratio is not None:
             self.subsample_ratio = subsample_ratio
-            logging.info("Shuffling features...", flush=True)
+            logging.info("Shuffling features...")
             start_shuffle_t = time.time()
             data = data.sample(frac=subsample_ratio, axis=1, random_state=self.random_state)
             stop_shuffle_t = time.time()
-            logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s", flush=True)
+            logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
 
         self.features = list(data.columns)
 
-        logging.info("Reading targets...", flush=True)
+        logging.info("Reading targets...")
         labels = pd.read_csv(target_file, header=0, index_col=0)
         self.target = labels.columns[0]
         logging.info(f"Target is {self.target}")
-        logging.info("Done.", flush=True)
+        logging.info("Done.")
 
-        logging.info("Splitting the datasets...", flush=True)
+        logging.info("Splitting the datasets...")
         if train_set_file is None:
             if validation:
                 X_train, X_test, y_train, y_test = train_test_split(data,
@@ -228,7 +230,7 @@ subsample_ratio: float
                                                                     random_state=self.random_state
                                                                     )
         else:
-            logging.info(f"Reading training set IDs...", flush=True)
+            logging.info(f"Reading training set IDs...")
             train_cluster = pd.read_csv(self.train_set_file, header=0)["id"].values.tolist()
 
             X_train = data.loc[train_cluster]
@@ -241,34 +243,35 @@ subsample_ratio: float
 
             self.train_frac = len(X_train) / (len(X_train) + len(X_test))
 
-        logging.info("Done.\n", flush=True)
+        logging.info("Done.\n")
 
         self.y_train_mean = y_train.mean().iloc[0]
 
         start_transf_t = time.time()
-        logging.info("Stats (train data):", flush=True)
+        logging.info("Stats (train data):")
         print_dataset_stats(X_train, y_train, self.target)
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
-        logging.info("Transforming X_train and y_train into DMatrices...", flush=True)
-        self.dtrain = xgb.DMatrix(X_train, y_train)
-        logging.info()
+        logging.info("Transforming X_train and y_train into DMatrices...")
+        # self.dtrain = xgb.DMatrix(X_train, y_train)
+        self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
+        logging.info("Done.\n")
 
         if validation:
-            logging.info("Stats (validation data):", flush=True)
+            logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
-            logging.info("Transforming X_validation and y_validation into DMatrices...", flush=True)
-            self.dvalidation = xgb.DMatrix(X_validation, y_validation)
+            logging.info("Transforming X_validation and y_validation into DMatrices...")
+            self.dvalidation = xgb.DMatrix(X_validation, y_validation,ref=self.dtrain)
         else:
             self.dvalidation = None
 
-        logging.info("Stats (test data):", flush=True)
+        logging.info("Stats (test data):")
         print_dataset_stats(X_test, y_test, self.target)
-        logging.info("Transforming X_test into DMatrices...", flush=True)
+        logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
-        self.dtest = xgb.DMatrix(X_test)
+        self.dtest = xgb.QuantileDMatrix(X_test,ref=self.dtrain)
 
         stop_transf_t = time.time()
-        logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s", flush=True)
+        logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")
         end_t = time.time()
         logging.info(f"Read time {end_t - start_t : .2f} s")
 
@@ -328,24 +331,18 @@ subsample_ratio: float
             params["device"] = "cuda"
         try:
             logging.info(f"Trying with {params['device']}")
-            self.bst = xgb.train(params=params, dtrain=self.dtrain,
-                             num_boost_round=self.num_trees,
-                             evals=evals,
-                             verbose_eval=5,
-                             early_stopping_rounds=self.early_stopping
-                             )
+            self.bst = xgb.train(params=params,
+                                 dtrain=self.dtrain,
+                                 num_boost_round=self.num_trees,
+                                 evals=evals,
+                                 verbose_eval=5,
+                                 early_stopping_rounds=self.early_stopping
+                                 )
             logging.info(f"Done training accelerated with {params['device']}")
-        except:
-            logging.error("Could not use CUDA device, falling back on CPU")
+        except Exception as e:
+            logging.error(e)
+            logging.error("Could not use CUDA device. Exiting...")
             exit(-1)
-            # params["device"] = "cpu"
-            # self.bst = xgb.train(params=params, dtrain=self.dtrain,
-                             # num_boost_round=self.num_trees,
-                             # evals=evals,
-                             # verbose_eval=5,
-                             # early_stopping_rounds=self.early_stopping
-                             # )
-            # logging.warning("Done on CPU")
 
         # update number of trees in case of early stopping
         self.num_trees = self.bst.num_boosted_rounds()
@@ -374,7 +371,7 @@ subsample_ratio: float
         logging.info(f"Best iteration: {self.best_it}")
 
         if "bin" in self.objective:  # classification
-            conf_mat = mt.confusion_matrix(self.y_test, self.y_pred)
+            conf_mat = mt.confusion_matrix(self.y_test, self.y_pred, labels=[0,1])
             true_neg = conf_mat[0][0]
             true_pos = conf_mat[1][1]
             false_neg = conf_mat[1][0]
@@ -437,11 +434,11 @@ subsample_ratio: float
         with open(stats_file, 'w') as stats:
             stats.write(f"method name,{self.model_name}\n")
             stats.write(f"algorithm,{self.method}\n")
-            stats.write(f"training set,{self.train_frac}\n")
-            stats.write(f"training set file,{self.train_set_file}\n")
+            # stats.write(f"training set,{self.train_frac}\n") # TODO: check why this is sus
+            # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
-            stats.write(f"feature set,{self.features_set_file}\n")
+            # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
             stats.write(f"trees,{self.num_trees}\n")
@@ -485,7 +482,8 @@ subsample_ratio: float
                 self.features_sets_dir
                 )
             for peak in peaks:
-                stats.write(f"{peak},{counts[peak]},{weights[peak]},{gains[peak]}\n")
+                try: stats.write(f"{peak},{counts[peak]},{weights[peak]},{gains[peak]}\n")
+                except: continue
             stats.write("\n")
 
             intersection_features, info_funct, info_n_tissue = data_ensemble(gains=pd.DataFrame(self.importance_gains, index=pd.Index(["gain"])).T, data_ensemble_file=self.data_ensemble_file)
@@ -570,6 +568,7 @@ if __name__ == "__main__":
     parser.add_argument("--features_sets_dir", type=str, default="/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/features-sets/",
                         help="Directory with regions files (abs path)")
 
+    parser.add_argument("--use-gpu", type=bool, default=False, help="Accelerate training with CUDA")
     args = parser.parse_args()
 
     logging.info(args)
@@ -594,7 +593,7 @@ if __name__ == "__main__":
 
     for it in range(args.iterations):
         logging.info(f"\n*** Iteration {it + 1} ***")
-        clf.fit(cuda=True)
+        clf.fit(cuda=args.use_gpu)
         clf.predict()
         clf.print_stats()
         clf.write_importance(f"importance-{it}")

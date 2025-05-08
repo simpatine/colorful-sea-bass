@@ -438,7 +438,7 @@ subsample_ratio: float
             stats.write(f"training set file,{self.train_set_file}\n")
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
-            stats.write(f"feature set,{self.features_set_file}\n")
+            stats.write(f"feature set directory,{self.features_sets_dir}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
             stats.write(f"trees,{self.num_trees}\n")

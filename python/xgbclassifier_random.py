@@ -374,7 +374,7 @@ subsample_ratio: float
         logging.info(f"Best iteration: {self.best_it}")
 
         if "bin" in self.objective:  # classification
-            conf_mat = mt.confusion_matrix(self.y_test, self.y_pred)
+            conf_mat = mt.confusion_matrix(self.y_test, self.y_pred, labels=[0,1])
             true_neg = conf_mat[0][0]
             true_pos = conf_mat[1][1]
             false_neg = conf_mat[1][0]
@@ -438,7 +438,7 @@ subsample_ratio: float
             stats.write(f"method name,{self.model_name}\n")
             stats.write(f"algorithm,{self.method}\n")
             stats.write(f"training set,{self.train_frac}\n")
-            stats.write(f"training set file,{self.train_set_file}\n")
+            # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
             stats.write(f"feature set,{self.features_set_file}\n")
@@ -570,6 +570,7 @@ if __name__ == "__main__":
     parser.add_argument("--features_sets_dir", type=str, default="/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/features-sets/",
                         help="Directory with regions files (abs path)")
 
+    parser.add_argument("--use-gpu", type=bool, default=False, help="Accelerate training with CUDA")
     args = parser.parse_args()
 
     logging.info(args)
@@ -594,7 +595,7 @@ if __name__ == "__main__":
 
     for it in range(args.iterations):
         logging.info(f"\n*** Iteration {it + 1} ***")
-        clf.fit(cuda=True)
+        clf.fit(cuda=args.use_gpu)
         clf.predict()
         clf.print_stats()
         clf.write_importance(f"importance-{it}")

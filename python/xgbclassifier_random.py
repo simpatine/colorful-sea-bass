@@ -76,7 +76,7 @@ def group_by_region(weights, gains, regions_folder):
               f"{counts_dic[file] * 100: .2f} %\t"
               f"{weights_dic[file] * 100: .2f}%")
         if file == "broad.csv":
-            logging.info()
+            logging.info("\n")
 
     return regions_files, counts_dic, weights_dic, gains_dic
 
@@ -101,7 +101,7 @@ def data_ensemble(gains, data_ensemble_file):
         info_n_tissue["gain"] = ensemble.groupby("funct")["gain"].sum()
 
         logging.info(info_funct)
-        logging.info()
+        logging.info("\n")
         logging.info(info_n_tissue)
         return intersection_features, info_funct, info_n_tissue
     else:
@@ -184,31 +184,31 @@ subsample_ratio: float
         train_set_file = self.train_set_file
 
         start_t = time.time()
-        logging.info("Loading features...", flush=True)
+        logging.info("Loading features...")
         data = pd.read_csv(data_file, low_memory=True,
                            index_col=0,  # first column as index
                            header=0  # first row as header
                            ).astype(np.int8)
         stop_t = time.time()
-        logging.info(f"Done in {stop_t - start_t : .2f} s.", flush=True)
+        logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
         if subsample_ratio is not None:
             self.subsample_ratio = subsample_ratio
-            logging.info("Shuffling features...", flush=True)
+            logging.info("Shuffling features...")
             start_shuffle_t = time.time()
             data = data.sample(frac=subsample_ratio, axis=1, random_state=self.random_state)
             stop_shuffle_t = time.time()
-            logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s", flush=True)
+            logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
 
         self.features = list(data.columns)
 
-        logging.info("Reading targets...", flush=True)
+        logging.info("Reading targets...")
         labels = pd.read_csv(target_file, header=0, index_col=0)
         self.target = labels.columns[0]
         logging.info(f"Target is {self.target}")
-        logging.info("Done.", flush=True)
+        logging.info("Done.")
 
-        logging.info("Splitting the datasets...", flush=True)
+        logging.info("Splitting the datasets...")
         if train_set_file is None:
             if validation:
                 X_train, X_test, y_train, y_test = train_test_split(data,
@@ -228,7 +228,7 @@ subsample_ratio: float
                                                                     random_state=self.random_state
                                                                     )
         else:
-            logging.info(f"Reading training set IDs...", flush=True)
+            logging.info(f"Reading training set IDs...")
             train_cluster = pd.read_csv(self.train_set_file, header=0)["id"].values.tolist()
 
             X_train = data.loc[train_cluster]
@@ -241,34 +241,34 @@ subsample_ratio: float
 
             self.train_frac = len(X_train) / (len(X_train) + len(X_test))
 
-        logging.info("Done.\n", flush=True)
+        logging.info("Done.\n")
 
         self.y_train_mean = y_train.mean().iloc[0]
 
         start_transf_t = time.time()
-        logging.info("Stats (train data):", flush=True)
+        logging.info("Stats (train data):")
         print_dataset_stats(X_train, y_train, self.target)
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
-        logging.info("Transforming X_train and y_train into DMatrices...", flush=True)
+        logging.info("Transforming X_train and y_train into DMatrices...")
         self.dtrain = xgb.DMatrix(X_train, y_train)
-        logging.info()
+        logging.info("\n")
 
         if validation:
-            logging.info("Stats (validation data):", flush=True)
+            logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
-            logging.info("Transforming X_validation and y_validation into DMatrices...", flush=True)
+            logging.info("Transforming X_validation and y_validation into DMatrices...")
             self.dvalidation = xgb.DMatrix(X_validation, y_validation)
         else:
             self.dvalidation = None
 
-        logging.info("Stats (test data):", flush=True)
+        logging.info("Stats (test data):")
         print_dataset_stats(X_test, y_test, self.target)
-        logging.info("Transforming X_test into DMatrices...", flush=True)
+        logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
         self.dtest = xgb.DMatrix(X_test)
 
         stop_transf_t = time.time()
-        logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s", flush=True)
+        logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")
         end_t = time.time()
         logging.info(f"Read time {end_t - start_t : .2f} s")
 

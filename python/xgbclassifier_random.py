@@ -250,7 +250,8 @@ subsample_ratio: float
         print_dataset_stats(X_train, y_train, self.target)
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
         logging.info("Transforming X_train and y_train into DMatrices...")
-        self.dtrain = xgb.DMatrix(X_train, y_train)
+        # self.dtrain = xgb.DMatrix(X_train, y_train)
+        self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
         logging.info("\n")
 
         if validation:
@@ -328,24 +329,18 @@ subsample_ratio: float
             params["device"] = "cuda"
         try:
             logging.info(f"Trying with {params['device']}")
-            self.bst = xgb.train(params=params, dtrain=self.dtrain,
-                             num_boost_round=self.num_trees,
-                             evals=evals,
-                             verbose_eval=5,
-                             early_stopping_rounds=self.early_stopping
-                             )
+            self.bst = xgb.train(params=params,
+                                 dtrain=self.dtrain,
+                                 num_boost_round=self.num_trees,
+                                 evals=evals,
+                                 verbose_eval=5,
+                                 early_stopping_rounds=self.early_stopping
+                                 )
             logging.info(f"Done training accelerated with {params['device']}")
-        except:
-            logging.error("Could not use CUDA device, falling back on CPU")
+        except Exception as e:
+            logging.error(e)
+            logging.error("Could not use CUDA device. Exiting...")
             exit(-1)
-            # params["device"] = "cpu"
-            # self.bst = xgb.train(params=params, dtrain=self.dtrain,
-                             # num_boost_round=self.num_trees,
-                             # evals=evals,
-                             # verbose_eval=5,
-                             # early_stopping_rounds=self.early_stopping
-                             # )
-            # logging.warning("Done on CPU")
 
         # update number of trees in case of early stopping
         self.num_trees = self.bst.num_boosted_rounds()
@@ -437,7 +432,7 @@ subsample_ratio: float
         with open(stats_file, 'w') as stats:
             stats.write(f"method name,{self.model_name}\n")
             stats.write(f"algorithm,{self.method}\n")
-            stats.write(f"training set,{self.train_frac}\n")
+            # stats.write(f"training set,{self.train_frac}\n") # TODO: check why this is sus
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")

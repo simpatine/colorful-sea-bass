@@ -68,6 +68,8 @@ def group_by_region(weights, gains, regions_folder):
         grouped_gains = gains.loc[list(common_strings), 0]
         grouped_counts = weights.loc[list(common_strings), 0]
 
+        if len(features) == 0: continue
+
         counts_dic[file] = len(common_strings) / len(features)
         weights_dic[file] = grouped_counts.sum() / total_counts
         gains_dic[file] = grouped_gains.sum() / total_gain
@@ -115,9 +117,9 @@ class XGBoostVariant:
     best_it: int
     best_score: float
 
-    dtrain: xgb.DMatrix
+    dtrain: xgb.QuantileDMatrix
     dvalidation: xgb.DMatrix
-    dtest: xgb.DMatrix
+    dtest: xgb.QuantileDMatrix
 
     y_pred: ndarray
     y_test: ndarray
@@ -252,13 +254,13 @@ subsample_ratio: float
         logging.info("Transforming X_train and y_train into DMatrices...")
         # self.dtrain = xgb.DMatrix(X_train, y_train)
         self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
-        logging.info("\n")
+        logging.info("Done.\n")
 
         if validation:
             logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
             logging.info("Transforming X_validation and y_validation into DMatrices...")
-            self.dvalidation = xgb.DMatrix(X_validation, y_validation)
+            self.dvalidation = xgb.DMatrix(X_validation, y_validation,ref=self.dtrain)
         else:
             self.dvalidation = None
 
@@ -266,7 +268,7 @@ subsample_ratio: float
         print_dataset_stats(X_test, y_test, self.target)
         logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
-        self.dtest = xgb.DMatrix(X_test)
+        self.dtest = xgb.QuantileDMatrix(X_test,ref=self.dtrain)
 
         stop_transf_t = time.time()
         logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")
@@ -436,7 +438,7 @@ subsample_ratio: float
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
-            stats.write(f"feature set,{self.features_set_file}\n")
+            # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
             stats.write(f"trees,{self.num_trees}\n")
@@ -480,7 +482,8 @@ subsample_ratio: float
                 self.features_sets_dir
                 )
             for peak in peaks:
-                stats.write(f"{peak},{counts[peak]},{weights[peak]},{gains[peak]}\n")
+                try: stats.write(f"{peak},{counts[peak]},{weights[peak]},{gains[peak]}\n")
+                except: continue
             stats.write("\n")
 
             intersection_features, info_funct, info_n_tissue = data_ensemble(gains=pd.DataFrame(self.importance_gains, index=pd.Index(["gain"])).T, data_ensemble_file=self.data_ensemble_file)

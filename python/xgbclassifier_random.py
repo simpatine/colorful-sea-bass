@@ -15,6 +15,7 @@ from numpy import ndarray
 import sklearn.metrics as mt
 from sklearn.model_selection import train_test_split
 from xgboost import Booster
+from concurrent.futures import ProcessPoolExecutor
 
 xgb.config_context(nthread=32)
 
@@ -111,6 +112,11 @@ def data_ensemble(gains, data_ensemble_file):
         logging.warning("No features in the data ensemble!!!")
         return intersection_features, pd.DataFrame(), pd.DataFrame()
 
+def parse_line(line: str):
+                parts = line.strip().split(',')
+                idx    = parts[0]
+                arr    = np.fromiter(map(int, parts[1:]), dtype=np.int8)
+                return idx, arr
 
 class XGBoostVariant:
     bst: Booster
@@ -194,13 +200,13 @@ subsample_ratio: float
 
             chromosomes_list = np.array([name.split(":")[0] for name in column_names])
             chromosomes_count = {item[0] : item[1] for item in np.unique(chromosomes_list, return_counts=True)}
-                
-            indexes = []
-            data_rows = []
-            for line in f:
-                parts = line.strip().split(',')
-                indexes.append(parts[0])
-                data_rows.append(np.array(list(map(int,parts[1:])), dtype=np.int8))
+            
+            with ProcessPoolExecutor() as pool:
+                results = pool.map(parse_line, f, chunksize=10)
+
+                idxs, rows = zip(*results)
+                indexes   = list(idxs)
+                data_rows = list(rows)
                 
             data_array = np.array(data_rows)
             data = pd.DataFrame(data_array, columns=column_names, index=indexes)
@@ -374,6 +380,8 @@ subsample_ratio: float
         # use CUDA if available
         if cuda:
             params["device"] = "cuda"
+        else:
+            params["nthread"] = 0
         try:
             logging.info(f"Trying with {params['device']}")
             self.bst = xgb.train(params=params,

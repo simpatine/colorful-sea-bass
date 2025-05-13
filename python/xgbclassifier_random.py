@@ -171,7 +171,7 @@ class XGBoostVariant:
 
         logging.info(f"Using XGBoost version {xgb.__version__}")
 
-    def read_datasets(self, data_file, target_file, subsample_ratio=None):
+    def read_datasets(self, data_file, target_file, subsample_ratio=1.0):
         """
 Parameters
 -----------
@@ -341,7 +341,7 @@ subsample_ratio: float
             logging.info(f"Done training accelerated with {params['device']}")
         except Exception as e:
             logging.error(e)
-            logging.error("Could not use CUDA device. Exiting...")
+            logging.error("Error during training. Exiting...")
             exit(-1)
 
         # update number of trees in case of early stopping
@@ -541,7 +541,7 @@ if __name__ == "__main__":
     parser.add_argument("--target", type=str, default="mortality.csv", help="Target csv file")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
-    parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
+    parser.add_argument("--subsample_ratio", type=float, default=1.0, help="Ratio of columns to select")
     parser.add_argument("--cluster", type=str, default=None, help="Cluster for training")
 
     parser.add_argument("--method", type=str, default="exact", help="Tree method")
@@ -572,6 +572,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.info(args)
+    if use-gpu and method != "hist":
+        logging.error("When using CUDA device the only supported method is hist.")
+        exit(0)
 
     clf = XGBoostVariant(model_name=args.model_name, train_set_file=args.cluster,
                          method=args.method, objective=args.objective, base_score=args.base_score, grow_policy=args.grow_policy, validation=args.validate,

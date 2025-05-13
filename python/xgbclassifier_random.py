@@ -1,5 +1,8 @@
 import argparse
-import json, os, time
+import json
+import math
+import os
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -184,7 +187,8 @@ subsample_ratio: float
         train_set_file = self.train_set_file
 
         start_t = time.time()
-        print("Loading features...", flush=True)
+        logging.info("Loading features...")
+        start_t = time.time()
         with open(data_file, 'r') as f:
             column_names = next(f).strip().split(',')[1:]
 
@@ -199,9 +203,8 @@ subsample_ratio: float
                 
             data_array = np.array(data_rows)
             data = pd.DataFrame(data_array, columns=column_names, index=indexes)
-
         stop_t = time.time()
-        print(f"Done in {stop_t - start_t : .2f} s.", flush=True)
+        logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
         if subsample_ratio is not None:
             self.subsample_ratio = subsample_ratio
@@ -447,7 +450,7 @@ subsample_ratio: float
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
-            # stats.write(f"feature set,{self.features_set_file}\n") # TODO: check why this is sus
+            # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
             stats.write(f"trees,{self.num_trees}\n")

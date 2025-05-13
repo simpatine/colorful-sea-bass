@@ -181,13 +181,24 @@ subsample_ratio: float
 
         start_t = time.time()
         print("Loading features...", flush=True)
-        data = pd.read_csv(data_file, low_memory=True,
-                           index_col=0,  # first column as index
-                           header=0  # first row as header
-                           ).astype(np.int8)
+        with open(data_file, 'r') as f:
+            column_names = next(f).strip().split(',')[1:]
+
+            chromosomes = {name.split(":")[0] for name in column_names}
+                
+            indexes = []
+            data_rows = []
+            for line in f:
+                parts = line.strip().split(',')
+                indexes.append(parts[0])
+                data_rows.append(np.array(list(map(int,parts[1:])), dtype=np.int8))
+                
+            data_array = np.array(data_rows)
+            data = pd.DataFrame(data_array, columns=column_names, index=indexes)
+
         stop_t = time.time()
         print(f"Done in {stop_t - start_t : .2f} s.", flush=True)
-
+        
         if subsample_ratio is not None:
             self.subsample_ratio = subsample_ratio
             print("Shuffling features...", flush=True)

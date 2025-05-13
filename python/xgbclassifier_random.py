@@ -118,9 +118,9 @@ class XGBoostVariant:
     best_it: int
     best_score: float
 
-    dtrain: xgb.DMatrix
-    dvalidation: xgb.DMatrix
-    dtest: xgb.DMatrix
+    dtrain: xgb.DMatrix | xgb.QuantileDMatrix
+    dvalidation: xgb.DMatrix | xgb.QuantileDMatrix
+    dtest: xgb.DMatrix | xgb.QuantileDMatrix
 
     y_pred: ndarray
     y_test: ndarray
@@ -289,14 +289,20 @@ subsample_ratio: float
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
         logging.info("Transforming X_train and y_train into DMatrices...")
         # self.dtrain = xgb.DMatrix(X_train, y_train)
-        self.dtrain = xgb.DMatrix(X_train, y_train)
+        if self.method == "hist":
+            self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
+        else:
+            self.dtrain = xgb.DMatrix(X_train, y_train)
         logging.info("Done.\n")
 
         if validation:
             logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
             logging.info("Transforming X_validation and y_validation into DMatrices...")
-            self.dvalidation = xgb.DMatrix(X_validation, y_validation)
+            if self.method == "hist":
+                self.dvalidation = xgb.QuantileDMatrix(X_validation, y_validation, ref = self.dtrain)
+            else:
+                self.dvalidation = xgb.DMatrix(X_validation, y_validation)
         else:
             self.dvalidation = None
 
@@ -304,7 +310,10 @@ subsample_ratio: float
         print_dataset_stats(X_test, y_test, self.target)
         logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
-        self.dtest = xgb.DMatrix(X_test)
+        if self.method == "hist":
+            self.dtest = xgb.QuantileDMatrix(X_test, ref = self.dtrain)
+        else:
+            self.dtest = xgb.DMatrix(X_test)
 
         stop_transf_t = time.time()
         logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")

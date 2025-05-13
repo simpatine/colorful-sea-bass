@@ -118,9 +118,9 @@ class XGBoostVariant:
     best_it: int
     best_score: float
 
-    dtrain: xgb.QuantileDMatrix
+    dtrain: xgb.DMatrix
     dvalidation: xgb.DMatrix
-    dtest: xgb.QuantileDMatrix
+    dtest: xgb.DMatrix
 
     y_pred: ndarray
     y_test: ndarray
@@ -172,7 +172,7 @@ class XGBoostVariant:
 
         logging.info(f"Using XGBoost version {xgb.__version__}")
 
-    def read_datasets(self, data_file, target_file, subsample_ratio=None):
+    def read_datasets(self, data_file, target_file, subsample_ratio=None, uniform_over_chromosomes = False):
         """
 Parameters
 -----------
@@ -192,7 +192,8 @@ subsample_ratio: float
         with open(data_file, 'r') as f:
             column_names = next(f).strip().split(',')[1:]
 
-            chromosomes = {name.split(":")[0] for name in column_names}
+            chromosomes_list = np.array([name.split(":")[0] for name in column_names])
+            chromosomes_count = {item[0] : item[1] for item in np.unique(chromosomes_list, return_counts=True)}
                 
             indexes = []
             data_rows = []
@@ -206,14 +207,37 @@ subsample_ratio: float
         stop_t = time.time()
         logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
+        n_columns = len(data.columns)
+
         if subsample_ratio is not None:
-            self.subsample_ratio = subsample_ratio
             logging.info("Shuffling features...")
             start_shuffle_t = time.time()
-            data = data.sample(frac=subsample_ratio, axis=1, random_state=self.random_state)
+
+            select = np.zeros(n_columns, dtype=bool)
+            self.subsample_ratio = subsample_ratio
+            n_sampled = int(subsample_ratio * n_columns)
+
+            if uniform_over_chromosomes:
+                
+                n_sampled_chromo = n_sampled // len(chromosomes_count)
+
+                for chromosome, count in chromosomes_count:
+                    chromosome_indices = np.where(chromosomes_list == chromosome)
+                    chromosome_select = np.zeros(count, dtype=bool)
+                    chromosome_select[:min(count, n_sampled_chromo)] = 1
+                    np.random.shuffle(chromosome_select)
+                    select[chromosome_indices] = chromosome_select
+
+            else:    
+                select[:n_sampled] = 1
+                np.random.shuffle(select)
+            
             stop_shuffle_t = time.time()
             logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
+        else:
+            select = np.ones(n_columns, dtype=bool)
 
+        data = data.loc[:, select]
         self.features = list(data.columns)
 
         logging.info("Reading targets...")
@@ -265,14 +289,14 @@ subsample_ratio: float
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
         logging.info("Transforming X_train and y_train into DMatrices...")
         # self.dtrain = xgb.DMatrix(X_train, y_train)
-        self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
+        self.dtrain = xgb.DMatrix(X_train, y_train)
         logging.info("Done.\n")
 
         if validation:
             logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
             logging.info("Transforming X_validation and y_validation into DMatrices...")
-            self.dvalidation = xgb.DMatrix(X_validation, y_validation,ref=self.dtrain)
+            self.dvalidation = xgb.DMatrix(X_validation, y_validation)
         else:
             self.dvalidation = None
 
@@ -280,7 +304,7 @@ subsample_ratio: float
         print_dataset_stats(X_test, y_test, self.target)
         logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
-        self.dtest = xgb.QuantileDMatrix(X_test,ref=self.dtrain)
+        self.dtest = xgb.DMatrix(X_test)
 
         stop_transf_t = time.time()
         logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")

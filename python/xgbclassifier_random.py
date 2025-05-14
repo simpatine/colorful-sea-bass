@@ -15,6 +15,7 @@ from numpy import ndarray
 import sklearn.metrics as mt
 from sklearn.model_selection import train_test_split
 from xgboost import Booster
+xgb.
 
 
 def read_feature_list(selection_file):
@@ -252,15 +253,14 @@ subsample_ratio: float
         print_dataset_stats(X_train, y_train, self.target)
         logging.info(f"\tmean(y_train) = {self.y_train_mean}")
         logging.info("Transforming X_train and y_train into DMatrices...")
-        # self.dtrain = xgb.DMatrix(X_train, y_train)
-        self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
+        self.dtrain = xgb.QuantileDMatrix(X_train, y_train, nthread=-1)
         logging.info("Done.\n")
 
         if validation:
             logging.info("Stats (validation data):")
             print_dataset_stats(X_validation, y_validation, self.target)
             logging.info("Transforming X_validation and y_validation into DMatrices...")
-            self.dvalidation = xgb.DMatrix(X_validation, y_validation,ref=self.dtrain)
+            self.dvalidation = xgb.QuantileDMatrix(X_validation, y_validation, nthread=-1)
         else:
             self.dvalidation = None
 
@@ -268,7 +268,7 @@ subsample_ratio: float
         print_dataset_stats(X_test, y_test, self.target)
         logging.info("Transforming X_test into DMatrices...")
         self.y_test = y_test
-        self.dtest = xgb.QuantileDMatrix(X_test,ref=self.dtrain)
+        self.dtest = xgb.QuantileDMatrix(X_test, nthread=-1)
 
         stop_transf_t = time.time()
         logging.info(f"Transformation time: {stop_transf_t - start_transf_t : .2f} s")
@@ -302,7 +302,7 @@ subsample_ratio: float
         if params is None:
             params = {"verbosity": 1, "device": "cpu", "tree_method": self.method,
                       "objective": self.objective, "grow_policy": self.grow_policy,
-                      "seed": self.random_state,
+                      "seed": self.random_state, "nthread" : -1,
                       "eta": self.eta, "max_depth": self.max_depth, "min_child_weight": self.min_child_weight
                       }
 

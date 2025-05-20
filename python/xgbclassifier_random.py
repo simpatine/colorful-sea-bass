@@ -199,7 +199,8 @@ subsample_ratio: float
             column_names = next(f).strip().split(',')[1:]
 
             chromosomes_list = np.array([name.split(":")[0] for name in column_names])
-            chromosomes_count = {item[0] : item[1] for item in np.unique(chromosomes_list, return_counts=True)}
+            count = np.unique(chromosomes_list, return_counts=True)
+            chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
             
             with ProcessPoolExecutor() as pool:
                 results = pool.map(parse_line, f, chunksize=10)
@@ -227,7 +228,7 @@ subsample_ratio: float
                 
                 n_sampled_chromo = n_sampled // len(chromosomes_count)
 
-                for chromosome, count in chromosomes_count:
+                for chromosome, count in chromosomes_count.items():
                     chromosome_indices = np.where(chromosomes_list == chromosome)
                     chromosome_select = np.zeros(count, dtype=bool)
                     chromosome_select[:min(count, n_sampled_chromo)] = 1
@@ -383,7 +384,7 @@ subsample_ratio: float
         else:
             params["nthread"] = 0
         try:
-            logging.info(f"Trying with {params['device']}")
+            logging.info(f"Trying with {params['device']}")    
             self.bst = xgb.train(params=params,
                                  dtrain=self.dtrain,
                                  num_boost_round=self.num_trees,
@@ -490,7 +491,8 @@ subsample_ratio: float
             # stats.write(f"training set,{self.train_frac}\n") # TODO: check why this is sus
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
-            stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
+            if args.subsample_ratio is not None:
+                stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
             # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
@@ -595,6 +597,7 @@ if __name__ == "__main__":
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
+    parser.add_argument("--uniform_over_chromosomes", type=bool, default=False, help="Wether the subsampling is made uniform over all chromosomes")
     parser.add_argument("--cluster", type=str, default=None, help="Cluster for training")
 
     parser.add_argument("--method", type=str, default="exact", help="Tree method")
@@ -636,7 +639,7 @@ if __name__ == "__main__":
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir
                          )
-    clf.read_datasets(target_file=args.target, data_file=args.dataset, subsample_ratio=args.subsample_ratio)
+    clf.read_datasets(target_file=args.target, data_file=args.dataset, subsample_ratio=args.subsample_ratio, uniform_over_chromosomes=args.uniform_over_chromosomes)
 
     try:
         os.mkdir(args.model_name)

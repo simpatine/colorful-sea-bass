@@ -178,7 +178,7 @@ class XGBoostVariant:
 
         logging.info(f"Using XGBoost version {xgb.__version__}")
 
-    def read_datasets(self, data_file, target_file, subsample_ratio=None, uniform_over_chromosomes = False):
+    def read_datasets(self, data_file, target_file, subsampling = None):
         """
 Parameters
 -----------
@@ -188,6 +188,8 @@ target_file: str/Path
     Path of the target data
 subsample_ratio: float
     Fraction of colummns to take
+subsampling: function
+    function for subsampling data
         """
         validation = self.validation
         train_set_file = self.train_set_file
@@ -197,10 +199,6 @@ subsample_ratio: float
         start_t = time.time()
         with open(data_file, 'r') as f:
             column_names = next(f).strip().split(',')[1:]
-
-            chromosomes_list = np.array([name.split(":")[0] for name in column_names])
-            count = np.unique(chromosomes_list, return_counts=True)
-            chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
             
             with ProcessPoolExecutor() as pool:
                 results = pool.map(parse_line, f, chunksize=10)
@@ -214,37 +212,15 @@ subsample_ratio: float
         stop_t = time.time()
         logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
-        n_columns = len(data.columns)
-
-        if subsample_ratio is not None:
-            logging.info("Shuffling features...")
+        if subsampling is not None:
+            logging.info("Subsampling features...")
             start_shuffle_t = time.time()
 
-            select = np.zeros(n_columns, dtype=bool)
-            self.subsample_ratio = subsample_ratio
-            n_sampled = int(subsample_ratio * n_columns)
+            data = subsampling(data)
 
-            if uniform_over_chromosomes:
-                
-                n_sampled_chromo = n_sampled // len(chromosomes_count)
-
-                for chromosome, count in chromosomes_count.items():
-                    chromosome_indices = np.where(chromosomes_list == chromosome)
-                    chromosome_select = np.zeros(count, dtype=bool)
-                    chromosome_select[:min(count, n_sampled_chromo)] = 1
-                    np.random.shuffle(chromosome_select)
-                    select[chromosome_indices] = chromosome_select
-
-            else:    
-                select[:n_sampled] = 1
-                np.random.shuffle(select)
-            
             stop_shuffle_t = time.time()
             logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
-        else:
-            select = np.ones(n_columns, dtype=bool)
 
-        data = data.loc[:, select]
         self.features = list(data.columns)
 
         logging.info("Reading targets...")
@@ -492,7 +468,7 @@ subsample_ratio: float
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
             if args.subsample_ratio is not None:
-                stats.write(f"Subsampling ratio,{self.subsample_ratio}\n")
+                stats.write(f"Subsampling ratio,{args.subsample_ratio}\n")
             # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")
@@ -584,6 +560,36 @@ subsample_ratio: float
                 importance_file.write(f"{item[0]}, {item[1]}\n")
 
 
+def subsample_standard(data, subsample_ratio = 1):
+    n_columns = len(data.columns)
+    select = np.zeros(n_columns, dtype=bool)
+    n_sampled = int(subsample_ratio * n_columns)
+
+    select[:n_sampled] = 1
+    np.random.shuffle(select)
+
+    return data.loc[:, select]
+
+def subsample_uniform_chromosomes(data, subsample_ratio = 1):
+    n_columns = len(data.columns)
+    select = np.zeros(n_columns, dtype=bool)
+    n_sampled = int(subsample_ratio * n_columns)
+
+    chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
+    count = np.unique(chromosomes_list, return_counts=True)
+    chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
+
+    n_sampled_chromo = n_sampled // len(chromosomes_count)
+
+    for chromosome, count in chromosomes_count.items():
+        chromosome_indices = np.where(chromosomes_list == chromosome)
+        chromosome_select = np.zeros(count, dtype=bool)
+        chromosome_select[:min(count, n_sampled_chromo)] = 1
+        np.random.shuffle(chromosome_select)
+        select[chromosome_indices] = chromosome_select
+
+    return data.loc[:, select]
+
 if __name__ == "__main__":
     logging.info("Starting now!")
     parser = argparse.ArgumentParser(description='XGBoost variant classifier')
@@ -639,7 +645,15 @@ if __name__ == "__main__":
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir
                          )
-    clf.read_datasets(target_file=args.target, data_file=args.dataset, subsample_ratio=args.subsample_ratio, uniform_over_chromosomes=args.uniform_over_chromosomes)
+    
+    subsampler = None 
+    if args.subsample_ratio is not None:
+        if args.uniform_over_chromosomes:
+            subsampler = lambda x: subsample_uniform_chromosomes(data = x, subsample_ratio=args.subsample_ratio)
+        else:
+            subsampler = lambda x: subsample_standard(data = x, subsample_ratio=args.subsample_ratio)
+
+    clf.read_datasets(target_file=args.target, data_file=args.dataset, subsampling=subsampler)
 
     try:
         os.mkdir(args.model_name)

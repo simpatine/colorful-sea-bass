@@ -9,7 +9,7 @@
 #SBATCH
 #SBATCH --time 3-00:00:00
 # use many CPU if not using CUDA
-#SBATCH --cpus-per-task 32
+#SBATCH --cpus-per-task 4
 #SBATCH --partition allgroups
 #SBATCH --mem 64G
 # uncomment to use GPU

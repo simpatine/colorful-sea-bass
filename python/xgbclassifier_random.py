@@ -469,6 +469,7 @@ subsampling: function
             stats.write(f"validation set,{self.validation}\n")
             if args.subsample_ratio is not None:
                 stats.write(f"Subsampling ratio,{args.subsample_ratio}\n")
+            stats.write(f"uniform over chromosomes, {args.uniform_over_chromosomes}")
             # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
             stats.write(f"early stopping,{self.early_stopping}\n")

@@ -16,6 +16,7 @@ import sklearn.metrics as mt
 from sklearn.model_selection import train_test_split
 from xgboost import Booster
 
+xgb.config_context(nthread=32)
 
 def read_feature_list(selection_file):
     features = pd.read_csv(selection_file, header=None)
@@ -187,10 +188,21 @@ subsample_ratio: float
 
         start_t = time.time()
         logging.info("Loading features...")
-        data = pd.read_csv(data_file, low_memory=True,
-                           index_col=0,  # first column as index
-                           header=0  # first row as header
-                           ).astype(np.int8)
+        start_t = time.time()
+        with open(data_file, 'r') as f:
+            column_names = next(f).strip().split(',')[1:]
+
+            chromosomes = {name.split(":")[0] for name in column_names}
+
+            indexes = []
+            data_rows = []
+            for line in f:
+                parts = line.strip().split(',')
+                indexes.append(parts[0])
+                data_rows.append(np.array(list(map(int,parts[1:])), dtype=np.int8))
+
+            data_array = np.array(data_rows)
+            data = pd.DataFrame(data_array, columns=column_names, index=indexes)
         stop_t = time.time()
         logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
@@ -407,10 +419,10 @@ subsample_ratio: float
 
         else:  # regression
             self.mae = mt.mean_absolute_error(self.y_test, self.y_pred)
-            self.rmse = math.sqrt(mt.mean_squared_error(self.y_test, self.y_pred))
+            self.rmse = np.sqrt(mt.mean_squared_error(self.y_test, self.y_pred))
             self.pcoeff = np.corrcoef(self.y_test, self.y_pred, rowvar=False)[0][1]
             reliability = 0.999
-            self.pcoeff_correct = math.sqrt((self.pcoeff ** 2) * reliability)
+            self.pcoeff_correct = np.sqrt((self.pcoeff ** 2) * reliability)
 
             logging.info(f"MAE = {self.mae : .2f}")
             logging.info(f"RMSE = {self.rmse : .2f}")
@@ -576,7 +588,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.info(args)
-    if use-gpu and method != "hist":
+    if args.use_gpu and method != "hist":
         logging.error("When using CUDA device the only supported method is hist.")
         exit(0)
 

@@ -15,7 +15,6 @@ from numpy import ndarray
 import sklearn.metrics as mt
 from sklearn.model_selection import train_test_split
 from xgboost import Booster
-xgb.
 
 
 def read_feature_list(selection_file):
@@ -364,7 +363,7 @@ subsample_ratio: float
 
         self.y_pred = self.bst.predict(self.dtest, iteration_range=iteration_range)
 
-    def print_stats(self):
+    def print_stats(self, stdout=False):
         logging.info("\n+++ Prediction stats +++")
 
         logging.info(f"Best score: {self.best_score}")
@@ -393,6 +392,10 @@ subsample_ratio: float
             except ValueError:
                 self.auc = None
             self.matthews = mt.matthews_corrcoef(self.y_test, self.y_pred)
+
+            if stdout:
+                print(f"Accuracy = {self.accuracy * 100 : .3f} %")
+                print(f"f1 = {self.f1 * 100 : .3f} %")
 
             logging.info(f"Accuracy = {self.accuracy * 100 : .3f} %")
             logging.info(f"f1 = {self.f1 * 100 : .3f} %")
@@ -569,6 +572,7 @@ if __name__ == "__main__":
                         help="Directory with regions files (abs path)")
 
     parser.add_argument("--use-gpu", type=bool, default=False, help="Accelerate training with CUDA")
+    parser.add_argument("--stdout-values", type=bool, default=False, help="Print minimal performance values to stdout")
     args = parser.parse_args()
 
     logging.info(args)
@@ -598,7 +602,7 @@ if __name__ == "__main__":
         logging.info(f"\n*** Iteration {it + 1} ***")
         clf.fit(cuda=args.use_gpu)
         clf.predict()
-        clf.print_stats()
+        clf.print_stats(stdout=args.stdout-values)
         clf.write_importance(f"importance-{it}")
         clf.set_weights(equal_weight=True)  # for next iteration
 

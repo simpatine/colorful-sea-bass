@@ -132,7 +132,8 @@ class XGBoostVariant:
 
     def __init__(self, model_name, num_trees, max_depth, min_child_weight, eta, early_stopping,
                  method, objective, base_score, grow_policy, validation, train_set_file, sample_bytree,
-                 sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir
+                 sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir,
+                 random_state
                  ):
         self.base_score = base_score
         self.estimated_base_score = None
@@ -156,7 +157,7 @@ class XGBoostVariant:
         self.by_tree = sample_bytree
         self.by_node = sample_bynode
         self.by_level = sample_by_level
-        self.random_state = 42
+        self.random_state = random_state
         self.model_name = model_name
         self.num_trees = num_trees
         self.train_frac = .8
@@ -583,6 +584,7 @@ if __name__ == "__main__":
     parser.add_argument("--features_sets_dir", type=str, default="/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/features-sets/",
                         help="Directory with regions files (abs path)")
 
+    parser.add_argument("--random-state", type=int, default=69, help="Number to use as random seed")
     parser.add_argument("--use-gpu", type=bool, default=False, help="Accelerate training with CUDA")
     parser.add_argument("--stdout-values", type=bool, default=False, help="Print minimal performance values to stdout")
     args = parser.parse_args()
@@ -601,6 +603,7 @@ if __name__ == "__main__":
 
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir
+                         random_state=args.random_state
                          )
     clf.read_datasets(target_file=args.target, data_file=args.dataset, subsample_ratio=args.subsample_ratio)
 

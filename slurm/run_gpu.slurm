@@ -7,11 +7,11 @@
 ##SBATCH --mail-user simone.moretti.1@studenti.unipd.it
 #SBATCH --mail-type ALL
 #SBATCH
-#SBATCH --time 1-12:00:00
+#SBATCH --time 0-2:00:00
 # use many CPU if not using CUDA
 #SBATCH --cpus-per-task 4
 #SBATCH --partition allgroups
-#SBATCH --mem 1450G
+#SBATCH --mem 64G
 # uncomment to use GPU
 #SBATCH --gres=gpu:rtx
 

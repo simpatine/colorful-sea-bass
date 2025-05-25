@@ -347,7 +347,7 @@ subsample_ratio: float
                                  dtrain=self.dtrain,
                                  num_boost_round=self.num_trees,
                                  evals=evals,
-                                 verbose_eval=5,
+                                 verbose_eval=0,
                                  early_stopping_rounds=self.early_stopping
                                  )
             logging.info(f"Done training accelerated with {params['device']}")
@@ -407,8 +407,8 @@ subsample_ratio: float
             self.matthews = mt.matthews_corrcoef(self.y_test, self.y_pred)
 
             if stdout:
-                print(f"Accuracy = {self.accuracy * 100 : .3f} %")
-                print(f"f1 = {self.f1 * 100 : .3f} %")
+                print(f"subsample_ratio;accuracy;f1;random_state")
+                print(f"{self.subsample_ratio : .3f};{self.accuracy * 100 : .3f};{self.f1 * 100 : .3f};{self.random_state}")
 
             logging.info(f"Accuracy = {self.accuracy * 100 : .3f} %")
             logging.info(f"f1 = {self.f1 * 100 : .3f} %")
@@ -602,8 +602,8 @@ if __name__ == "__main__":
                          num_parallel_trees=args.num_parallel_trees,
 
                          data_ensemble_file=args.data_ensemble,
-                         features_sets_dir=args.features_sets_dir
-                         random_state=args.random_state
+                         features_sets_dir=args.features_sets_dir,
+                         random_state=args.random_state,
                          )
     clf.read_datasets(target_file=args.target, data_file=args.dataset, subsample_ratio=args.subsample_ratio)
 
@@ -617,7 +617,7 @@ if __name__ == "__main__":
         logging.info(f"\n*** Iteration {it + 1} ***")
         clf.fit(cuda=args.use_gpu)
         clf.predict()
-        clf.print_stats(stdout=args.stdout-values)
+        clf.print_stats(stdout=args.stdout_values)
         clf.write_importance(f"importance-{it}")
         clf.set_weights(equal_weight=True)  # for next iteration
 

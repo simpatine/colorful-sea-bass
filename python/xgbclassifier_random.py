@@ -138,7 +138,8 @@ class XGBoostVariant:
 
     def __init__(self, model_name, num_trees, max_depth, min_child_weight, eta, early_stopping,
                  method, objective, base_score, grow_policy, validation, train_set_file, sample_bytree,
-                 sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir
+                 sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir,
+                 random_state
                  ):
         self.base_score = base_score
         self.estimated_base_score = None
@@ -162,7 +163,7 @@ class XGBoostVariant:
         self.by_tree = sample_bytree
         self.by_node = sample_bynode
         self.by_level = sample_by_level
-        self.random_state = 42
+        self.random_state = random_state
         self.model_name = model_name
         self.num_trees = num_trees
         self.train_frac = .8
@@ -330,7 +331,7 @@ subsampling: function
         if params is None:
             params = {"verbosity": 1, "device": "cpu", "tree_method": self.method,
                       "objective": self.objective, "grow_policy": self.grow_policy,
-                      "seed": self.random_state,
+                      "seed": self.random_state, "nthread" : -1,
                       "eta": self.eta, "max_depth": self.max_depth, "min_child_weight": self.min_child_weight
                       }
 
@@ -365,13 +366,13 @@ subsampling: function
                                  dtrain=self.dtrain,
                                  num_boost_round=self.num_trees,
                                  evals=evals,
-                                 verbose_eval=5,
+                                 verbose_eval=0,
                                  early_stopping_rounds=self.early_stopping
                                  )
             logging.info(f"Done training accelerated with {params['device']}")
         except Exception as e:
             logging.error(e)
-            logging.error("Could not use CUDA device. Exiting...")
+            logging.error("Error during training. Exiting...")
             exit(-1)
 
         # update number of trees in case of early stopping
@@ -394,7 +395,7 @@ subsampling: function
 
         self.y_pred = self.bst.predict(self.dtest, iteration_range=iteration_range)
 
-    def print_stats(self):
+    def print_stats(self, stdout=False):
         logging.info("\n+++ Prediction stats +++")
 
         logging.info(f"Best score: {self.best_score}")
@@ -423,6 +424,10 @@ subsampling: function
             except ValueError:
                 self.auc = None
             self.matthews = mt.matthews_corrcoef(self.y_test, self.y_pred)
+
+            if stdout:
+                print(f"subsample_ratio;accuracy;f1;random_state")
+                print(f"{self.subsample_ratio : .3f};{self.accuracy * 100 : .3f};{self.f1 * 100 : .3f};{self.random_state}")
 
             logging.info(f"Accuracy = {self.accuracy * 100 : .3f} %")
             logging.info(f"f1 = {self.f1 * 100 : .3f} %")
@@ -631,10 +636,15 @@ if __name__ == "__main__":
     parser.add_argument("--features_sets_dir", type=str, default="/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/features-sets/",
                         help="Directory with regions files (abs path)")
 
+    parser.add_argument("--random-state", type=int, default=69, help="Number to use as random seed")
     parser.add_argument("--use-gpu", type=bool, default=False, help="Accelerate training with CUDA")
+    parser.add_argument("--stdout-values", type=bool, default=False, help="Print minimal performance values to stdout")
     args = parser.parse_args()
 
     logging.info(args)
+    if args.use_gpu and method != "hist":
+        logging.error("When using CUDA device the only supported method is hist.")
+        exit(0)
 
     clf = XGBoostVariant(model_name=args.model_name, train_set_file=args.cluster,
                          method=args.method, objective=args.objective, base_score=args.base_score, grow_policy=args.grow_policy, validation=args.validate,
@@ -645,6 +655,7 @@ if __name__ == "__main__":
 
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir
+                         random_state=args.random_state,
                          )
     
     subsampler = None 
@@ -666,7 +677,7 @@ if __name__ == "__main__":
         logging.info(f"\n*** Iteration {it + 1} ***")
         clf.fit(cuda=args.use_gpu)
         clf.predict()
-        clf.print_stats()
+        clf.print_stats(stdout=args.stdout_values)
         clf.write_importance(f"importance-{it}")
         clf.set_weights(equal_weight=True)  # for next iteration
 

@@ -642,7 +642,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.info(args)
-    if args.use_gpu and method != "hist":
+    if args.use_gpu and args.method != "hist":
         logging.error("When using CUDA device the only supported method is hist.")
         exit(0)
 
@@ -654,7 +654,7 @@ if __name__ == "__main__":
                          num_parallel_trees=args.num_parallel_trees,
 
                          data_ensemble_file=args.data_ensemble,
-                         features_sets_dir=args.features_sets_dir
+                         features_sets_dir=args.features_sets_dir,
                          random_state=args.random_state,
                          )
     

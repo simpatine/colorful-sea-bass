@@ -139,7 +139,7 @@ class XGBoostVariant:
     def __init__(self, model_name, num_trees, max_depth, min_child_weight, eta, early_stopping,
                  method, objective, base_score, grow_policy, validation, train_set_file, sample_bytree,
                  sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir,
-                 random_state
+                 random_state, subsample_ratio
                  ):
         self.base_score = base_score
         self.estimated_base_score = None
@@ -164,6 +164,7 @@ class XGBoostVariant:
         self.by_node = sample_bynode
         self.by_level = sample_by_level
         self.random_state = random_state
+        self.subsample_ratio = subsample_ratio
         self.model_name = model_name
         self.num_trees = num_trees
         self.train_frac = .8
@@ -656,6 +657,7 @@ if __name__ == "__main__":
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir,
                          random_state=args.random_state,
+                         subsample_ratio=args.subsample_ratio
                          )
     
     subsampler = None 

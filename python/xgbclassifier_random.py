@@ -8,6 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s\t%(levelname)s\t:%(message)s",encoding='utf-8', level=logging.INFO)
 
+import copy
+import ast
+from functools import partial
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -179,6 +182,106 @@ class XGBoostVariant:
         self.train_set_file = train_set_file
 
         logging.info(f"Using XGBoost version {xgb.__version__}")
+
+    def read(self, data_file):
+        logging.info("Loading features...")
+        start_t = time.time()
+        with open(data_file, 'r') as f:
+            column_names = next(f).strip().split(',')[1:]
+            
+            with ProcessPoolExecutor() as pool:
+                results = pool.map(parse_line, f, chunksize=10)
+
+                idxs, rows = zip(*results)
+                indexes   = list(idxs)
+                data_rows = list(rows)
+                
+            data_array = np.array(data_rows)
+            data = pd.DataFrame(data_array, columns=column_names, index=indexes)
+        stop_t = time.time()
+        logging.info(f"Done in {stop_t - start_t : .2f} s.")
+
+        return data 
+    
+    def subsample(self, data, subsampling_ratios, subsampling, iterations = 1):
+
+        sampled_data = []
+
+        logging.info("Subsampling features...")
+        start_shuffle_t = time.time()
+        for subsample_ratio in subsampling_ratios:
+            for i in range(iterations):
+                data_n = subsampling(data,subsample_ratio)
+                sampled_data.append([copy.deepcopy(self), data_n, subsample_ratio, i])
+
+        stop_shuffle_t = time.time()
+        logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
+
+        return sampled_data
+
+    
+    def transformation(self, data, target_file):
+
+        validation = self.validation
+        train_set_file = self.train_set_file
+
+        self.features = list(data.columns)
+
+        labels = pd.read_csv(target_file, header=0, index_col=0)
+        self.target = labels.columns[0]
+        if train_set_file is None:
+            if validation:
+                X_train, X_test, y_train, y_test = train_test_split(data,
+                                                                    labels,
+                                                                    train_size=self.train_frac,
+                                                                    random_state=self.random_state
+                                                                    )
+                X_test, X_validation, y_test, y_validation = train_test_split(X_test,
+                                                                              y_test,
+                                                                              train_size=.5,
+                                                                              random_state=self.random_state
+                                                                              )
+            else:
+                X_train, X_test, y_train, y_test = train_test_split(data,
+                                                                    labels,
+                                                                    train_size=self.train_frac,
+                                                                    random_state=self.random_state
+                                                                    )
+        else:
+            train_cluster = pd.read_csv(self.train_set_file, header=0)["id"].values.tolist()
+
+            X_train = data.loc[train_cluster]
+            y_train = labels.loc[train_cluster]  # Series
+            y_train = pd.DataFrame(y_train)
+
+            X_test = data.drop(train_cluster)
+            y_test = labels.drop(train_cluster)  # Series
+            y_test = pd.DataFrame(y_test)
+
+            self.train_frac = len(X_train) / (len(X_train) + len(X_test))
+
+        self.y_train_mean = y_train.mean().iloc[0]
+
+        # self.dtrain = xgb.DMatrix(X_train, y_train)
+        if self.method == "hist":
+            self.dtrain = xgb.QuantileDMatrix(X_train, y_train)
+        else:
+            self.dtrain = xgb.DMatrix(X_train, y_train)
+
+        if validation:
+            if self.method == "hist":
+                self.dvalidation = xgb.QuantileDMatrix(X_validation, y_validation, ref = self.dtrain)
+            else:
+                self.dvalidation = xgb.DMatrix(X_validation, y_validation)
+        else:
+            self.dvalidation = None
+
+        self.y_test = y_test
+        if self.method == "hist":
+            self.dtest = xgb.QuantileDMatrix(X_test, ref = self.dtrain)
+        else:
+            self.dtest = xgb.DMatrix(X_test)
+
 
     def read_datasets(self, data_file, target_file, subsampling = None):
         """
@@ -427,8 +530,7 @@ subsampling: function
             self.matthews = mt.matthews_corrcoef(self.y_test, self.y_pred)
 
             if stdout:
-                print(f"subsample_ratio;accuracy;f1;random_state")
-                print(f"{self.subsample_ratio : .3f};{self.accuracy * 100 : .3f};{self.f1 * 100 : .3f};{self.random_state}")
+                print(f"{self.subsample_ratio : .10f};{self.accuracy * 100 : .3f};{self.f1 * 100 : .3f};{self.random_state}")
 
             logging.info(f"Accuracy = {self.accuracy * 100 : .3f} %")
             logging.info(f"f1 = {self.f1 * 100 : .3f} %")
@@ -577,14 +679,17 @@ def subsample_standard(data, subsample_ratio = 1):
 
     return data.loc[:, select]
 
-def subsample_uniform_chromosomes(data, subsample_ratio = 1):
+def subsample_uniform_chromosomes(data, subsample_ratio = 1, chromosome_info = None):
     n_columns = len(data.columns)
     select = np.zeros(n_columns, dtype=bool)
     n_sampled = int(subsample_ratio * n_columns)
 
-    chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
-    count = np.unique(chromosomes_list, return_counts=True)
-    chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
+    if chromosome_info is None:
+        chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
+        count = np.unique(chromosomes_list, return_counts=True)
+        chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
+    else:
+        chromosomes_list, chromosomes_count = chromosome_info
 
     n_sampled_chromo = n_sampled // len(chromosomes_count)
 
@@ -596,6 +701,22 @@ def subsample_uniform_chromosomes(data, subsample_ratio = 1):
         select[chromosome_indices] = chromosome_select
 
     return data.loc[:, select]
+
+def train(args, target_file, stdout = False):
+
+    clf:XGBoostVariant = args[0]
+    data = args[1]
+    subsample_ratio = args[2]
+    iteration = args[3]
+    clf.random_state = iteration 
+    clf.subsample_ratio = subsample_ratio
+    
+    clf.transformation(data, target_file)
+    clf.fit()
+    clf.predict()
+    clf.print_stats(stdout=stdout)
+    #clf.write_importance(f"importance-{it}")
+    clf.set_weights(equal_weight=True)
 
 if __name__ == "__main__":
     logging.info("Starting now!")
@@ -610,6 +731,7 @@ if __name__ == "__main__":
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
+    parser.add_argument("--subsample_ratios", type=str, default=None, help="Ratios of columns to select")
     parser.add_argument("--uniform_over_chromosomes", type=bool, default=False, help="Wether the subsampling is made uniform over all chromosomes")
     parser.add_argument("--cluster", type=str, default=None, help="Cluster for training")
 
@@ -659,15 +781,19 @@ if __name__ == "__main__":
                          random_state=args.random_state,
                          subsample_ratio=args.subsample_ratio
                          )
-    
+
     subsampler = None 
-    if args.subsample_ratio is not None:
+    if args.subsample_ratios is not None:
+        args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
+        if args.uniform_over_chromosomes:
+            subsampler = subsample_uniform_chromosomes
+        else:
+            subsampler = subsample_standard
+    elif args.subsample_ratio is not None: 
         if args.uniform_over_chromosomes:
             subsampler = lambda x: subsample_uniform_chromosomes(data = x, subsample_ratio=args.subsample_ratio)
         else:
             subsampler = lambda x: subsample_standard(data = x, subsample_ratio=args.subsample_ratio)
-
-    clf.read_datasets(target_file=args.target, data_file=args.dataset, subsampling=subsampler)
 
     try:
         os.mkdir(args.model_name)
@@ -675,16 +801,45 @@ if __name__ == "__main__":
         logging.info(f"Warning: overwriting existing files in {args.model_name}")
     os.chdir(args.model_name)
 
-    for it in range(args.iterations):
-        logging.info(f"\n*** Iteration {it + 1} ***")
-        clf.fit(cuda=args.use_gpu)
-        clf.predict()
-        clf.print_stats(stdout=args.stdout_values)
-        clf.write_importance(f"importance-{it}")
-        clf.set_weights(equal_weight=True)  # for next iteration
+    if args.subsample_ratios is not None:
+        data = clf.read(data_file=args.dataset)
+        
+        if args.uniform_over_chromosomes:
+            logging.info("Finding chromosomes")
+            start_t = time.time()
+            chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
+            count = np.unique(chromosomes_list, return_counts=True)
+            chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
+            chromosome_info = (chromosomes_list, chromosomes_count)
+            subsampler = lambda x, y: subsample_uniform_chromosomes(data=x, subsample_ratio=y, chromosome_info=chromosome_info)
+            logging.info(f"Chromosomes found in {time.time() - start_t : .2f}s")
 
-    clf.plot_trees(tree_name="weighted")
-    clf.write_stats()
+        to_map = clf.subsample(data=data, subsampling_ratios=args.subsample_ratios, subsampling=subsampler, iterations=args.iterations)
+        
+        if args.stdout_values:
+            print("subsample_ratio;accuracy;f1;iteration")
+
+        #for process in to_map:
+        #    train(process, args.target, args.stdout_values)
+
+        train_wrapper = partial(train, target_file = args.target, stdout = args.stdout_values)
+        
+        with ProcessPoolExecutor() as pool:
+            pool.map(train_wrapper, to_map, chunksize=1)
+
+    else:
+        clf.read_datasets(target_file=args.target, data_file=args.dataset, subsampling=subsampler)
+
+        for it in range(args.iterations):
+            logging.info(f"\n*** Iteration {it + 1} ***")
+            clf.fit(cuda=args.use_gpu)
+            clf.predict()
+            clf.print_stats(stdout=args.stdout_values)
+            clf.write_importance(f"importance-{it}")
+            clf.set_weights(equal_weight=True)  # for next iteration
+
+        clf.plot_trees(tree_name="weighted")
+        clf.write_stats()
 
 # TODO add variable constraints
 # TODO add scale_pos_weight to balance classes

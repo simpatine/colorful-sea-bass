@@ -1,3 +1,19 @@
 \section{Methodology}
 \label{sec:methods}
 
+In this work we tried to evaluate the effectiveness of random subsampling of genes in improving predictions of mortality.
+We always subsampled selecting a subset of genes in the whole dataset.
+
+The idea is to help our estimator to not get lost in the $\sim 10^6$ genes, but allowing it to work with only a smaller number of genes at a time. Hopefully in this way our model will give better results.
+
+Once we subsampled the dataset, we used the \texttt{XGBoost}\cite{xgboost} library to construct a predictor in a fast and easy manner. 
+
+\paragraph{Uniform subsampling.}
+The first and simplest thing we tried was to randomly and uniformly subsample the genes on the entire genome.
+We selected a given fraction of the genes, keeping or discarding each gene with fixed and uniform probability.
+
+\paragraph{Uniform subsampling on chromosomes.}
+A second possibility is to uniformly sample a fixed fraction of genes on each chromosome.
+
+\paragraph{Subsampling using annotations.}
+Some genes have been linked to specific organs, tissues or functions. This information can be used to select and sample genes

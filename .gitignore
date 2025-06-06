@@ -182,3 +182,11 @@ default-model/
 
 # Wherever simpatine saves datasets
 datasets/
+
+# LaTeX temporary files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+tmp/
+

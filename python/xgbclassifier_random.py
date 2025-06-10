@@ -116,10 +116,10 @@ def data_ensemble(gains, data_ensemble_file):
         return intersection_features, pd.DataFrame(), pd.DataFrame()
 
 def parse_line(line: str):
-                parts = line.strip().split(',')
-                idx    = parts[0]
-                arr    = np.fromiter(map(int, parts[1:]), dtype=np.int8)
-                return idx, arr
+    parts = line.strip().split(',')
+    idx    = parts[0]
+    arr    = np.fromiter(map(int, parts[1:]), dtype=np.int8)
+    return idx, arr
 
 class XGBoostVariant:
     bst: Booster
@@ -203,11 +203,25 @@ class XGBoostVariant:
 
         return data 
     
-    def subsample(self, data, subsampling_ratios, subsampling, iterations = 1):
+    def subsample(self, data, subsampling, subsampling_ratios = None, iterations = 1):
 
         sampled_data = []
 
         logging.info("Subsampling features...")
+
+        if subsampling_ratios is None:
+            start_shuffle_t = time.time()
+            for i in range(iterations):
+                data_n = subsampling(data)
+                sampled_data.append([copy.deepcopy(self), data_n, None, i])
+
+            stop_shuffle_t = time.time()
+            logging.info(f"Done in {stop_shuffle_t - start_shuffle_t : .2f} s")
+            return sampled_data
+
+        if type(subsampling_ratios) != list:
+            subsampling_ratios = [subsampling_ratios]
+
         start_shuffle_t = time.time()
         for subsample_ratio in subsampling_ratios:
             for i in range(iterations):
@@ -702,6 +716,33 @@ def subsample_uniform_chromosomes(data, subsample_ratio = 1, chromosome_info = N
 
     return data.loc[:, select]
 
+def is_annotated(x, snp_ids):
+    return x[0] if x[1] in snp_ids else None
+
+def subsample_annotated(data, snp_ids):
+    selected_columns = list(snp_ids & set(data.columns))
+
+    return data[selected_columns]
+
+def parse_line_annotations(line: str):
+    return line.split(",")[0]
+
+def read_annotations(file_path):    
+
+    logging.info("Loading annotations...")
+    start_t = time.time()
+    with open(file_path, "r") as f:
+        header = next(f)
+
+        with ProcessPoolExecutor() as pool:
+            snp_ids = pool.map(parse_line_annotations, f, chunksize=10)
+            snp_ids = set(snp_ids)
+
+    logging.info(f"Done loading annotations in {time.time()-start_t : .2f}s")
+    
+    return snp_ids
+
+
 def train(args, target_file, stdout = False):
 
     clf:XGBoostVariant = args[0]
@@ -728,6 +769,7 @@ if __name__ == "__main__":
                         help="Features csv file")
     parser.add_argument('--shuffle_features', default=True, action="store_true")
     parser.add_argument("--target", type=str, default="mortality.csv", help="Target csv file")
+    parser.add_argument("--annotations", type=str, default=None, help="Annotations csv file")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
@@ -765,6 +807,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.info(args)
+
+    if args.annotations is not None and (args.subsample_ratio is not None or args.subsample_ratios is not None):
+        logging.error("Subsampling is not available after annotations selection")
+        exit(0)
+
     if args.use_gpu and args.method != "hist":
         logging.error("When using CUDA device the only supported method is hist.")
         exit(0)
@@ -785,15 +832,17 @@ if __name__ == "__main__":
     subsampler = None 
     if args.subsample_ratios is not None:
         args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
+    
+    if args.subsample_ratios is not None or args.subsample_ratio is not None:
         if args.uniform_over_chromosomes:
             subsampler = subsample_uniform_chromosomes
         else:
             subsampler = subsample_standard
-    elif args.subsample_ratio is not None: 
-        if args.uniform_over_chromosomes:
-            subsampler = lambda x: subsample_uniform_chromosomes(data = x, subsample_ratio=args.subsample_ratio)
-        else:
-            subsampler = lambda x: subsample_standard(data = x, subsample_ratio=args.subsample_ratio)
+    elif args.annotations is not None:
+        snp_ids = read_annotations(args.annotations)
+        subsampler = lambda x: subsample_annotated(data = x, snp_ids=snp_ids)
+    else:
+        subsampler = lambda x: x
 
     try:
         os.mkdir(args.model_name)
@@ -801,33 +850,33 @@ if __name__ == "__main__":
         logging.info(f"Warning: overwriting existing files in {args.model_name}")
     os.chdir(args.model_name)
 
-    if args.subsample_ratios is not None:
-        data = clf.read(data_file=args.dataset)
-        
-        if args.uniform_over_chromosomes:
-            logging.info("Finding chromosomes")
-            start_t = time.time()
-            chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
-            count = np.unique(chromosomes_list, return_counts=True)
-            chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
-            chromosome_info = (chromosomes_list, chromosomes_count)
-            subsampler = lambda x, y: subsample_uniform_chromosomes(data=x, subsample_ratio=y, chromosome_info=chromosome_info)
-            logging.info(f"Chromosomes found in {time.time() - start_t : .2f}s")
+    
+    data = clf.read(data_file=args.dataset)
+    
+    if args.uniform_over_chromosomes:
+        logging.info("Finding chromosomes")
+        start_t = time.time()
+        chromosomes_list = np.array([name.split(":")[0] for name in data.columns])
+        count = np.unique(chromosomes_list, return_counts=True)
+        chromosomes_count = {count[0][i] : count[1][i] for i in range(len(count[0]))}
+        chromosome_info = (chromosomes_list, chromosomes_count)
+        subsampler = lambda x, y: subsample_uniform_chromosomes(data=x, subsample_ratio=y, chromosome_info=chromosome_info)
+        logging.info(f"Chromosomes found in {time.time() - start_t : .2f}s")
 
-        to_map = clf.subsample(data=data, subsampling_ratios=args.subsample_ratios, subsampling=subsampler, iterations=args.iterations)
-        
-        if args.stdout_values:
-            print("subsample_ratio;accuracy;f1;iteration")
+    to_map = clf.subsample(data=data, subsampling_ratios=args.subsample_ratios, subsampling=subsampler, iterations=args.iterations)
+    
+    if args.stdout_values:
+        print("subsample_ratio;accuracy;f1;iteration")
 
         #for process in to_map:
         #    train(process, args.target, args.stdout_values)
 
-        train_wrapper = partial(train, target_file = args.target, stdout = args.stdout_values)
-        
-        with ProcessPoolExecutor() as pool:
-            pool.map(train_wrapper, to_map, chunksize=1)
+    train_wrapper = partial(train, target_file = args.target, stdout = args.stdout_values)
+    
+    with ProcessPoolExecutor() as pool:
+        pool.map(train_wrapper, to_map, chunksize=1)
 
-    else:
+    """
         clf.read_datasets(target_file=args.target, data_file=args.dataset, subsampling=subsampler)
 
         for it in range(args.iterations):
@@ -840,7 +889,7 @@ if __name__ == "__main__":
 
         clf.plot_trees(tree_name="weighted")
         clf.write_stats()
-
+    """
 # TODO add variable constraints
 # TODO add scale_pos_weight to balance classes
 # TODO add gamma (high for conservative algorithm)

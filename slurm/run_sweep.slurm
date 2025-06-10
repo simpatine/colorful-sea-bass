@@ -28,8 +28,8 @@ do
     touch $outdir/out_subsample_$i.txt
         (srun --overlap python python/xgbclassifier_random.py --subsample_ratio $i --method="hist" --stdout-values 1 \
             --random-state $s \
-            --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/features.csv" \
-            --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/exclude-chr3/mortality.csv" >> $outdir/out_subsample_$i.txt)&
+            --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features.csv" \
+            --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/mortality.csv" >> $outdir/out_subsample_$i.txt)&
     done
     wait
 done

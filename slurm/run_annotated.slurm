@@ -20,10 +20,11 @@ outdir="$(pwd)/annotated"
 mkdir -p $outdir
 cd ..
 
-file_id=0
-
-touch $outdir/out_$file_id.txt
-srun python python/xgbclassifier_random.py  --method="hist" --iterations 32 --stdout-values 1 \
-        --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features.csv" \
-        --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/mortality.csv" \
-        --annotations "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features-sets/data_ensembl.csv" >> $outdir/out_$file_id.txt
+for file_id in "Open_chromatin" "Enhancer" "Promoter"
+do
+        touch $outdir/out_$file_id.txt
+        srun python python/xgbclassifier_random.py --subsample_ratios="[1,0.5,0.1,0.05]"  --method="hist" --iterations 8 --stdout-values 1 \
+                --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features.csv" \
+                --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/mortality.csv" \
+                --annotations "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features-sets/data_ensembl.csv" --annotation_type $file_id >> $outdir/out_$file_id.txt
+done

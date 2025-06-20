@@ -724,20 +724,22 @@ def subsample_annotated(data, snp_ids):
 
     return data[selected_columns]
 
-def parse_line_annotations(line: str):
-    return line.split(",")[0]
+def parse_line_annotations(line: str, annotation=None):
+    line_split = line.split(",")
+    return line_split[0] if annotation is None or line_split[1] == annotation else "SNP not selected"
 
-def read_annotations(file_path):    
+def read_annotations(file_path, annotation = None):    
 
     logging.info("Loading annotations...")
     start_t = time.time()
     with open(file_path, "r") as f:
         header = next(f)
 
+        parse_line_annotations_wrapper = partial(parse_line_annotations, annotation=annotation)
         with ProcessPoolExecutor() as pool:
-            snp_ids = pool.map(parse_line_annotations, f, chunksize=10)
+            snp_ids = pool.map(parse_line_annotations_wrapper, f, chunksize=10)
             snp_ids = set(snp_ids)
-
+    snp_ids.discard("SNP not selected")
     logging.info(f"Done loading annotations in {time.time()-start_t : .2f}s")
     
     return snp_ids
@@ -770,6 +772,7 @@ if __name__ == "__main__":
     parser.add_argument('--shuffle_features', default=True, action="store_true")
     parser.add_argument("--target", type=str, default="mortality.csv", help="Target csv file")
     parser.add_argument("--annotations", type=str, default=None, help="Annotations csv file")
+    parser.add_argument("--annotation_type", type=str, default=None, help="Annotation to be selected")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
@@ -808,10 +811,6 @@ if __name__ == "__main__":
 
     logging.info(args)
 
-    if args.annotations is not None and (args.subsample_ratio is not None or args.subsample_ratios is not None):
-        logging.error("Subsampling is not available after annotations selection")
-        exit(0)
-
     if args.use_gpu and args.method != "hist":
         logging.error("When using CUDA device the only supported method is hist.")
         exit(0)
@@ -832,15 +831,23 @@ if __name__ == "__main__":
     subsampler = None 
     if args.subsample_ratios is not None:
         args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
-    
-    if args.subsample_ratios is not None or args.subsample_ratio is not None:
+    elif args.subsample_ratio is not None:
+        args.subsample_ratios = [args.subsample_ratio]
+
+    if args.annotations is not None:
+        snp_ids = read_annotations(file_path=args.annotations, annotation=args.annotation_type)
+        if args.subsample_ratios is not None:
+            if args.uniform_over_chromosomes:
+                subsampler = lambda x, y: subsample_uniform_chromosomes(subsample_annotated(data=x, snp_ids=snp_ids), subsample_ratio=y)
+            else:
+                subsampler = lambda x, y: subsample_standard(subsample_annotated(data=x, snp_ids=snp_ids),subsample_ratio=y)
+        else:
+            subsampler = lambda x: subsample_annotated(data = x, snp_ids=snp_ids)
+    elif args.subsample_ratios is not None:
         if args.uniform_over_chromosomes:
             subsampler = subsample_uniform_chromosomes
         else:
             subsampler = subsample_standard
-    elif args.annotations is not None:
-        snp_ids = read_annotations(args.annotations)
-        subsampler = lambda x: subsample_annotated(data = x, snp_ids=snp_ids)
     else:
         subsampler = lambda x: x
 
@@ -894,3 +901,5 @@ if __name__ == "__main__":
 # TODO add scale_pos_weight to balance classes
 # TODO add gamma (high for conservative algorithm)
 # TODO params["eval_metric"] = "auc"
+
+#test --subsample_ratio=0.5 --annotations="datasets/data_ensemble.csv" --dataset="C:\Users\smnmr\OneDrive\Desktop\uni\Bioinformatics\Progetto\colorful-sea-bass\datasets\features-sample10.csv" --target="C:\Users\smnmr\OneDrive\Desktop\uni\Bioinformatics\Progetto\colorful-sea-bass\datasets\mortality-sample10.csv" --annotation_type="Open_chromatin"

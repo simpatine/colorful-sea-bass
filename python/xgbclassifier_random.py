@@ -716,18 +716,22 @@ def subsample_annotated(data, snp_ids):
 
     return data[selected_columns]
 
-def parse_line_annotations(line: str, annotation=None):
+def parse_line_annotations(line: str, note_type=None, n_tissue=None):
     line_split = line.split(",")
-    return line_split[0] if annotation is None or line_split[1] == annotation else "SNP not selected"
+    if (note_type is None or line_split[1] == note_type) and
+       (n_tissue is None or int(line_split[2]) == int(n_tissue)):
+        return line_split[0]
+    else: "SNP not selected"
 
-def read_annotations(file_path, annotation = None):
+def read_annotations(file_path, note_type = None, n_tissue=None):
+    """ """
 
     logging.info("Loading annotations...")
     start_t = time.time()
     with open(file_path, "r") as f:
         header = next(f)
 
-        parse_line_annotations_wrapper = partial(parse_line_annotations, annotation=annotation)
+        parse_line_annotations_wrapper = partial(parse_line_annotations, note_type=note_type, n_tissue=n_tissue)
         with ProcessPoolExecutor() as pool:
             snp_ids = pool.map(parse_line_annotations_wrapper, f, chunksize=10)
             snp_ids = set(snp_ids)
@@ -764,7 +768,8 @@ if __name__ == "__main__":
     parser.add_argument('--shuffle_features', default=True, action="store_true")
     parser.add_argument("--target", type=str, default="mortality.csv", help="Target csv file")
     parser.add_argument("--annotations", type=str, default=None, help="Annotations csv file")
-    parser.add_argument("--annotation_type", type=str, default=None, help="Annotation to be selected")
+    parser.add_argument("--annotation_type", type=str, default=None, help="Type of genes to be selected using the annotations")
+    parser.add_argument("--annotations_n_tissue", type=int, default=None, help="n_tissue to be selected using the annotations")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratios", type=str, default=None, help="Ratios of columns to select")
@@ -823,7 +828,7 @@ if __name__ == "__main__":
         args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
 
     if args.annotations is not None:
-        snp_ids = read_annotations(file_path=args.annotations, annotation=args.annotation_type)
+        snp_ids = read_annotations(file_path=args.annotations, note_type=args.annotation_type, n_tissue=args.n_tissue)
         if args.subsample_ratios is not None:
             if args.uniform_over_chromosomes:
                 subsampler = lambda x, y: subsample_uniform_chromosomes(subsample_annotated(data=x, snp_ids=snp_ids), subsample_ratio=y)

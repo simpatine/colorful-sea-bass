@@ -19,7 +19,7 @@ source /nfsd/bcb/bcbg/rossigno/.miniconda3/bin/activate
 cd ..
 
 # srun python dna-classifier.py
-srun python python/xgbclassifier_random.py --subsample_ratio=0.01 --method="hist" --random-state 42 \
+srun python python/xgbclassifier_random.py --subsample_ratios="0.01" --method="hist" --random-state 42 \
     --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features.csv" \
     --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/mortality.csv"
 

@@ -26,7 +26,7 @@ do
     for i in 0.00005 0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5 1
     do
     touch $outdir/out_subsample_$i.txt
-        (srun --overlap python python/xgbclassifier_random.py --subsample_ratio $i --method="hist" --stdout-values 1 \
+        (srun --overlap python python/xgbclassifier_random.py --subsample_ratios="[$i]" --method="hist" --stdout-values 1 \
             --random-state $s \
             --dataset "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/features.csv" \
             --target "/nfsd/bcb/bcbg/rossigno/PNRR/variant-classifier/datasets/include-chr3/mortality.csv" >> $outdir/out_subsample_$i.txt)&

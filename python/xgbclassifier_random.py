@@ -142,7 +142,7 @@ class XGBoostVariant:
     def __init__(self, model_name, num_trees, max_depth, min_child_weight, eta, early_stopping,
                  method, objective, base_score, grow_policy, validation, train_set_file, sample_bytree,
                  sample_by_level, sample_bynode, num_parallel_trees, data_ensemble_file, features_sets_dir,
-                 random_state, subsample_ratio
+                 random_state
                  ):
         self.base_score = base_score
         self.estimated_base_score = None
@@ -586,8 +586,6 @@ subsampling: function
             # stats.write(f"training set,{self.train_frac}\n") # TODO: check why this is sus
             # stats.write(f"training set file,{self.train_set_file}\n") # TODO: check why this is sus
             stats.write(f"validation set,{self.validation}\n")
-            if args.subsample_ratio is not None:
-                stats.write(f"Subsampling ratio,{args.subsample_ratio}\n")
             stats.write(f"uniform over chromosomes, {args.uniform_over_chromosomes}")
             # stats.write(f"feature set,{self.features_set_file}\n")
             stats.write(f"features available,{len(self.features)}\n")
@@ -769,7 +767,6 @@ if __name__ == "__main__":
     parser.add_argument("--annotation_type", type=str, default=None, help="Annotation to be selected")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
-    parser.add_argument("--subsample_ratio", type=float, default=None, help="Ratio of columns to select")
     parser.add_argument("--subsample_ratios", type=str, default=None, help="Ratios of columns to select")
     parser.add_argument("--uniform_over_chromosomes", type=bool, default=False, help="Wether the subsampling is made uniform over all chromosomes")
     parser.add_argument("--cluster", type=str, default=None, help="Cluster for training")
@@ -824,8 +821,6 @@ if __name__ == "__main__":
     subsampler = None
     if args.subsample_ratios is not None:
         args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
-    elif args.subsample_ratio is not None:
-        args.subsample_ratios = [args.subsample_ratio]
 
     if args.annotations is not None:
         snp_ids = read_annotations(file_path=args.annotations, annotation=args.annotation_type)

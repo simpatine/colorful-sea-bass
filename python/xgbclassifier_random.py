@@ -719,7 +719,7 @@ def subsample_annotated(data, snp_ids):
 def parse_line_annotations(line: str, note_type=None, n_tissue=None):
     line_split = line.split(",")
     if (note_type is None or line_split[1] == note_type) and \
-       (n_tissue is None or int(line_split[2]) == int(n_tissue)):
+       (n_tissue is None or int(n_tissue) <= int(line_split[2]) < 10+int(n_tissue)):
         return line_split[0]
     else: "SNP not selected"
 
@@ -769,7 +769,7 @@ if __name__ == "__main__":
     parser.add_argument("--target", type=str, default="mortality.csv", help="Target csv file")
     parser.add_argument("--annotations", type=str, default=None, help="Annotations csv file")
     parser.add_argument("--annotation_type", type=str, default=None, help="Type of genes to be selected using the annotations")
-    parser.add_argument("--annotations_n_tissue", type=int, default=None, help="n_tissue to be selected using the annotations")
+    parser.add_argument("--n_tissue", type=int, default=None, help="n_tissue to be selected using the annotations")
     parser.add_argument('--validate', default=False, action="store_true")
     parser.add_argument("--select", type=str, default=None, help="List of feature to select")
     parser.add_argument("--subsample_ratios", type=str, default=None, help="Ratios of columns to select")

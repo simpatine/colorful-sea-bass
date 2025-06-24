@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name subsample-xgboost-parallel
-#SBATCH --output logs/train_ntissue.log
-#SBATCH --error logs/train_ntissue.err
+#SBATCH --output logs/train_ntissue_int.log
+#SBATCH --error logs/train_ntissue_int.err
 #SBATCH --mail-user giovanni.gaio.1@studenti.unipd.it
 ##SBATCH --mail-user simone.moretti.1@studenti.unipd.it
 #SBATCH --mail-type ALL
@@ -20,7 +20,7 @@ outdir="$(pwd)/annotated"
 mkdir -p $outdir
 cd ..
 
-for ntissue in $(seq 1 25)
+for ntissue in 0 10 20
 do
         touch $outdir/out_$ntissue.txt
         srun python python/xgbclassifier_random.py --subsample_ratios="[1,0.5,0.1,0.05,0.01,0.005,0.001,0.0005]"  --method="hist" --iterations 8 --stdout-values 1 \

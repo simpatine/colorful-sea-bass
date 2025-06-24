@@ -718,7 +718,7 @@ def subsample_annotated(data, snp_ids):
 
 def parse_line_annotations(line: str, note_type=None, n_tissue=None):
     line_split = line.split(",")
-    if (note_type is None or line_split[1] == note_type) and
+    if (note_type is None or line_split[1] == note_type) and \
        (n_tissue is None or int(line_split[2]) == int(n_tissue)):
         return line_split[0]
     else: "SNP not selected"

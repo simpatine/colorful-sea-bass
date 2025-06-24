@@ -167,7 +167,6 @@ class XGBoostVariant:
         self.by_node = sample_bynode
         self.by_level = sample_by_level
         self.random_state = random_state
-        self.subsample_ratio = subsample_ratio
         self.model_name = model_name
         self.num_trees = num_trees
         self.train_frac = .8
@@ -188,21 +187,21 @@ class XGBoostVariant:
         start_t = time.time()
         with open(data_file, 'r') as f:
             column_names = next(f).strip().split(',')[1:]
-            
+
             with ProcessPoolExecutor() as pool:
                 results = pool.map(parse_line, f, chunksize=10)
 
                 idxs, rows = zip(*results)
                 indexes   = list(idxs)
                 data_rows = list(rows)
-                
+
             data_array = np.array(data_rows)
             data = pd.DataFrame(data_array, columns=column_names, index=indexes)
         stop_t = time.time()
         logging.info(f"Done in {stop_t - start_t : .2f} s.")
 
-        return data 
-    
+        return data
+
     def subsample(self, data, subsampling, subsampling_ratios = None, iterations = 1):
 
         sampled_data = []
@@ -233,7 +232,7 @@ class XGBoostVariant:
 
         return sampled_data
 
-    
+
     def transformation(self, data, target_file):
 
         validation = self.validation
@@ -305,8 +304,6 @@ data_file: str/Path
     Path of the genome data
 target_file: str/Path
     Path of the target data
-subsample_ratio: float
-    Fraction of colummns to take
 subsampling: function
     function for subsampling data
         """
@@ -318,14 +315,14 @@ subsampling: function
         start_t = time.time()
         with open(data_file, 'r') as f:
             column_names = next(f).strip().split(',')[1:]
-            
+
             with ProcessPoolExecutor() as pool:
                 results = pool.map(parse_line, f, chunksize=10)
 
                 idxs, rows = zip(*results)
                 indexes   = list(idxs)
                 data_rows = list(rows)
-                
+
             data_array = np.array(data_rows)
             data = pd.DataFrame(data_array, columns=column_names, index=indexes)
         stop_t = time.time()
@@ -479,7 +476,7 @@ subsampling: function
         else:
             params["nthread"] = 0
         try:
-            logging.info(f"Trying with {params['device']}")    
+            logging.info(f"Trying with {params['device']}")
             self.bst = xgb.train(params=params,
                                  dtrain=self.dtrain,
                                  num_boost_round=self.num_trees,
@@ -716,9 +713,6 @@ def subsample_uniform_chromosomes(data, subsample_ratio = 1, chromosome_info = N
 
     return data.loc[:, select]
 
-def is_annotated(x, snp_ids):
-    return x[0] if x[1] in snp_ids else None
-
 def subsample_annotated(data, snp_ids):
     selected_columns = list(snp_ids & set(data.columns))
 
@@ -728,7 +722,7 @@ def parse_line_annotations(line: str, annotation=None):
     line_split = line.split(",")
     return line_split[0] if annotation is None or line_split[1] == annotation else "SNP not selected"
 
-def read_annotations(file_path, annotation = None):    
+def read_annotations(file_path, annotation = None):
 
     logging.info("Loading annotations...")
     start_t = time.time()
@@ -741,7 +735,7 @@ def read_annotations(file_path, annotation = None):
             snp_ids = set(snp_ids)
     snp_ids.discard("SNP not selected")
     logging.info(f"Done loading annotations in {time.time()-start_t : .2f}s")
-    
+
     return snp_ids
 
 
@@ -751,9 +745,9 @@ def train(args, target_file, stdout = False):
     data = args[1]
     subsample_ratio = args[2]
     iteration = args[3]
-    clf.random_state = iteration 
+    clf.random_state = iteration
     clf.subsample_ratio = subsample_ratio
-    
+
     clf.transformation(data, target_file)
     clf.fit()
     clf.predict()
@@ -825,10 +819,9 @@ if __name__ == "__main__":
                          data_ensemble_file=args.data_ensemble,
                          features_sets_dir=args.features_sets_dir,
                          random_state=args.random_state,
-                         subsample_ratio=args.subsample_ratio
                          )
 
-    subsampler = None 
+    subsampler = None
     if args.subsample_ratios is not None:
         args.subsample_ratios = ast.literal_eval(args.subsample_ratios)
     elif args.subsample_ratio is not None:
@@ -857,9 +850,9 @@ if __name__ == "__main__":
         logging.info(f"Warning: overwriting existing files in {args.model_name}")
     os.chdir(args.model_name)
 
-    
+
     data = clf.read(data_file=args.dataset)
-    
+
     if args.uniform_over_chromosomes:
         logging.info("Finding chromosomes")
         start_t = time.time()
@@ -871,35 +864,11 @@ if __name__ == "__main__":
         logging.info(f"Chromosomes found in {time.time() - start_t : .2f}s")
 
     to_map = clf.subsample(data=data, subsampling_ratios=args.subsample_ratios, subsampling=subsampler, iterations=args.iterations)
-    
+
     if args.stdout_values:
         print("subsample_ratio;accuracy;f1;iteration")
 
-        #for process in to_map:
-        #    train(process, args.target, args.stdout_values)
-
     train_wrapper = partial(train, target_file = args.target, stdout = args.stdout_values)
-    
+
     with ProcessPoolExecutor() as pool:
         pool.map(train_wrapper, to_map, chunksize=1)
-
-    """
-        clf.read_datasets(target_file=args.target, data_file=args.dataset, subsampling=subsampler)
-
-        for it in range(args.iterations):
-            logging.info(f"\n*** Iteration {it + 1} ***")
-            clf.fit(cuda=args.use_gpu)
-            clf.predict()
-            clf.print_stats(stdout=args.stdout_values)
-            clf.write_importance(f"importance-{it}")
-            clf.set_weights(equal_weight=True)  # for next iteration
-
-        clf.plot_trees(tree_name="weighted")
-        clf.write_stats()
-    """
-# TODO add variable constraints
-# TODO add scale_pos_weight to balance classes
-# TODO add gamma (high for conservative algorithm)
-# TODO params["eval_metric"] = "auc"
-
-#test --subsample_ratio=0.5 --annotations="datasets/data_ensemble.csv" --dataset="C:\Users\smnmr\OneDrive\Desktop\uni\Bioinformatics\Progetto\colorful-sea-bass\datasets\features-sample10.csv" --target="C:\Users\smnmr\OneDrive\Desktop\uni\Bioinformatics\Progetto\colorful-sea-bass\datasets\mortality-sample10.csv" --annotation_type="Open_chromatin"

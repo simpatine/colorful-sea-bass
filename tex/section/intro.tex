@@ -1,4 +1,10 @@
 \section{Introduction}
 \label{sec:intro}
-The analysis of genomes to predict the effects of disease. But given the size of genomes it is not always easy to understand the genes that have an phenotype related to the disease effects.
+The use of genomes to predict the effects of disease has been largely celebrated.
+But actually finding such links is usually not easy, and an automatic data-driven technique to predict disease outcome would be very useful.
+Given the size of genomes it is not always easy to understand the genes that have an phenotype related to the disease effects.
+The size of the datasets hinders the efficacy of standard machine-learning techniques, as few example genomes are available but each is composed of hundreds of thousands of bases, if not many millions.
+
+The scope of this work is to experiment with some simple random subsampling techniques. The idea is to keep only a subset of the genome bases while keeping all the individual genomes sequenced.
+The hope is that this will allow a standard machine-learning algorithm to better understand the structure and importance of the gene with respect to the disease outcome.
 

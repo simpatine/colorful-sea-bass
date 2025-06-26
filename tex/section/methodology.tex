@@ -1,7 +1,15 @@
 \section{Methodology}
 \label{sec:methods}
-
 We tried to evaluate the effectiveness of random subsampling of genes in improving predictions of mortality.
+
+\subsection{Dataset}
+The main dataset we used was a table filled with the genome of $990$ individual sea basses.
+The sequenced genome at our disposal was made up of $6072853$ individual genes.
+
+In addition to the set of genes for some individuals, we had a set of annotated genes.
+For a subset of genes some further information is known: a function (either \texttt{Open\_chromatin}, \texttt{Enhancer} or \texttt{Promoter}) and a tissue number (between $0$ and $25$).
+
+\subsection{Subsampling techniques}
 We always subsampled selecting a subset of genes in the whole dataset.
 
 The idea is to help our estimator to not get lost in the $\sim 10^6$ genes, but allowing it to work with only a smaller number of genes at a time.
@@ -16,7 +24,7 @@ We selected a given fraction of the genes, keeping or discarding each gene with 
 A second possibility is to uniformly and randomly sample a fixed number of genes on each chromosome.
 
 \subsection{Annotated genes}
-
+Using the additional information at our disposal we used only a subset of annotated genes. Among these we further subsampled to obtain a small feature set.
 
 \paragraph{Subsampling using annotations.}
 Some genes have been linked to specific organs, tissues or functions. This information can be used to select and sample genes with only some function or organ and subsample among these.

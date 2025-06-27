@@ -32,8 +32,8 @@ for group, suptitle, outfile in groups:
 
         # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
         # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
-        ax[i].errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy")
-        ax[i].errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1")
+        ax[i].errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy", markersize=8, capsize=5)
+        ax[i].errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1", markersize=8, capsize=5)
         ax[i].grid()
         ax[i].legend()
 

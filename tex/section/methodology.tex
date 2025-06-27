@@ -3,18 +3,28 @@
 We tried to evaluate the effectiveness of random subsampling of genes in improving predictions of mortality.
 
 \subsection{Dataset}
+% features.csv
 The main dataset we used was a table filled with the genome of $990$ individual sea basses.
-The sequenced genome at our disposal was made up of $6072853$ individual genes.
+The sequenced genome at our disposal was made up of $6072853$ individual genes. % TODO: non sono geni, ma mutazioni
+
+% TODO: mortality.csv
 
 In addition to the set of genes for some individuals, we had a set of annotated genes.
 For a subset of genes some further information is known: a function (either \texttt{Open\_chromatin}, \texttt{Enhancer} or \texttt{Promoter}) and a tissue number (between $0$ and $25$).
 
+\subsection{Data pipeline}
+\begin{enumerate}
+    \item Subsampling. The idea is to help our estimator to not get lost in the $\sim 10^6$ genes, but allowing it to work with only a smaller number of genes at a time. This step is thourghly explained in \autoref{sec:subsample}
+    \item Train-test split.
+    \item Training. Once we subsampled the dataset,  we used the \texttt{XGBoost}\cite{xgboost} library to construct a predictor in a fast and easy manner. We always used the parameter \texttt{method="hist"}, as we didn't find any meaningful difference between the options and this offers the widest compatibility across devices.
+    \item Evaluation.
+\end{enumerate}
+randomisation...
+
 \subsection{Subsampling techniques}
+\label{sec:subsample}
 We always subsampled selecting a subset of genes in the whole dataset.
 
-The idea is to help our estimator to not get lost in the $\sim 10^6$ genes, but allowing it to work with only a smaller number of genes at a time.
-
-Once we subsampled the dataset,  we used the \texttt{XGBoost}\cite{xgboost} library to construct a predictor in a fast and easy manner. 
 
 \paragraph{Uniform subsampling.}
 The first and simplest thing we tried was to randomly and uniformly subsample the genes on the entire genome.

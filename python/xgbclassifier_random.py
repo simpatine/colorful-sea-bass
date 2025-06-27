@@ -247,18 +247,18 @@ class XGBoostVariant:
                 X_train, X_test, y_train, y_test = train_test_split(data,
                                                                     labels,
                                                                     train_size=self.train_frac,
-                                                                    random_state=self.random_state
+                                                                    random_state=42
                                                                     )
                 X_test, X_validation, y_test, y_validation = train_test_split(X_test,
                                                                               y_test,
                                                                               train_size=.5,
-                                                                              random_state=self.random_state
+                                                                              random_state=42
                                                                               )
             else:
                 X_train, X_test, y_train, y_test = train_test_split(data,
                                                                     labels,
                                                                     train_size=self.train_frac,
-                                                                    random_state=self.random_state
+                                                                    random_state=42
                                                                     )
         else:
             train_cluster = pd.read_csv(self.train_set_file, header=0)["id"].values.tolist()
@@ -351,18 +351,18 @@ subsampling: function
                 X_train, X_test, y_train, y_test = train_test_split(data,
                                                                     labels,
                                                                     train_size=self.train_frac,
-                                                                    random_state=self.random_state
+                                                                    random_state=42
                                                                     )
                 X_test, X_validation, y_test, y_validation = train_test_split(X_test,
                                                                               y_test,
                                                                               train_size=.5,
-                                                                              random_state=self.random_state
+                                                                              random_state=42
                                                                               )
             else:
                 X_train, X_test, y_train, y_test = train_test_split(data,
                                                                     labels,
                                                                     train_size=self.train_frac,
-                                                                    random_state=self.random_state
+                                                                    random_state=42
                                                                     )
         else:
             logging.info(f"Reading training set IDs...")
@@ -446,7 +446,7 @@ subsampling: function
         if params is None:
             params = {"verbosity": 1, "device": "cpu", "tree_method": self.method,
                       "objective": self.objective, "grow_policy": self.grow_policy,
-                      "seed": self.random_state, "nthread" : -1,
+                      "seed": 42, "nthread" : -1,
                       "eta": self.eta, "max_depth": self.max_depth, "min_child_weight": self.min_child_weight
                       }
 

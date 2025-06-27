@@ -1,5 +1,4 @@
 subsample_ratio;accuracy;f1;iteration
-subsample_ratio;accuracy;f1;iteration
  1.0000000000; 53.030; 45.614;23
  1.0000000000; 57.576; 51.163;0
  1.0000000000; 60.101; 50.314;17

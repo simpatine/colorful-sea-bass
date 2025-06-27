@@ -2,27 +2,33 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("data/subsampling.csv", delimiter=";",header=0)
 
-vals = data.groupby("subsample_ratio").mean()
-errs = data.groupby("subsample_ratio").std()
+# file, title, outfile
+files = [("data/subsampling.csv",'Accuracy and F1 scores with random subsampling on all genes',"subsample_plot.png")] +  \
+        [("data/subsampling.csv",'Accuracy and F1 scores with random subsampling uniformly on the chromosomes',"uniform_sample_low_ratio.png")] + \
+        [(f"data/annotated/out_{function}.txt",f'Accuracy and F1 scores with random subsampling on genes annotated with {function}',f"subsample_annotated_{function}.png") for function in ["Open_chromatin","Enhancer","Promoter"]] + \
+        [(f"data/ntissue/out_{ntissue}.txt",f'Accuracy and F1 scores with random subsampling on genes with ntissue in [{ntissue},{ntissue+10})',f"subsample_ntissue_{ntissue}.png") for ntissue in [0,10,20]]
 
+for datapath,title,outfile in files:
+    data = pd.read_csv(datapath, delimiter=";",header=0)
 
-# plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
-# plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
-plt.figure(figsize=(8,5))
-plt.errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy")
-plt.errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1")
-plt.xscale("log")
-plt.title('Accuracy and F1 scores with random subsampling on all genes')
-plt.xlabel("Subsampling ratio")
-plt.ylabel("Accuracy/F1 score (%)")
-plt.grid()
-plt.legend()
-plt.tight_layout()
-plt.savefig("subsample_plot.png")
-plt.show()
+    vals = data.groupby("subsample_ratio").mean()
+    errs = data.groupby("subsample_ratio").std()
 
+    # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
+    # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
+    plt.figure(figsize=(8,5))
+    plt.errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy")
+    plt.errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1")
+    plt.xscale("log")
+    plt.title(title)
+    plt.xlabel("Subsampling ratio")
+    plt.ylabel("Accuracy/F1 score (%)")
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(outfile)
+    # plt.show()
 
 exit(0)
 

@@ -4,31 +4,43 @@ import matplotlib.pyplot as plt
 
 
 # file, title, outfile
-files = [("data/subsampling.csv",'Accuracy and F1 scores with random subsampling on all genes',"subsample_plot.png")] +  \
-        [("data/subsampling.csv",'Accuracy and F1 scores with random subsampling uniformly on the chromosomes',"uniform_sample_low_ratio.png")] + \
-        [(f"data/annotated/out_{function}.txt",f'Accuracy and F1 scores with random subsampling on genes annotated with {function}',f"subsample_annotated_{function}.png") for function in ["Open_chromatin","Enhancer","Promoter"]] + \
-        [(f"data/ntissue/out_{ntissue}.txt",f'Accuracy and F1 scores with random subsampling on genes with ntissue in [{ntissue},{ntissue+10})',f"subsample_ntissue_{ntissue}.png") for ntissue in [0,10,20]]
+groups = [
+        ([("data/out_subsample.txt",None,None)],'on all genes',"subsample_plot.png"),
+        ([("data/out_unifsub.txt",None,None)],'uniformly on the chromosomes',"uniform_sample_low_ratio.png"),
+        ([(f"data/annotated/out_{function}.txt",'{function}',{"function":function}) for function in ["Open_chromatin","Enhancer","Promoter"]],
+         "on annotated genes",f"subsample_annotated.png"),
+        ([(f"data/ntissue/out_{ntissue}.txt","[{l},{r})",{"l":ntissue,"r":ntissue+10}) for ntissue in [0,10,20]],
+         f'on genes with ntissue in given ranges' ,f"subsample_ntissue.png"),
+        ]
 
-for datapath,title,outfile in files:
-    data = pd.read_csv(datapath, delimiter=";",header=0)
 
-    vals = data.groupby("subsample_ratio").mean()
-    errs = data.groupby("subsample_ratio").std()
+for group, suptitle, outfile in groups:
+    fig,ax = plt.subplots(1,len(group),figsize=(8*len(group)**0.7,4+len(group)), sharey=True, sharex=True, dpi=100)
+    if len(group) == 1: ax = [ax]
+    fig.suptitle("Accuracy and F1 scores with random subsampling " + suptitle)
+    for i,(datapath,title,vals) in enumerate(group):
+        ax[i].set_xscale("log")
+        if title is not None:
+            ax[i].set_title(title.format(**vals))
+        ax[i].set_xlabel("Subsampling ratio")
+        ax[i].set_ylabel("Accuracy/F1 score (%)")
+        print(f"Working on {datapath}...")
+        data = pd.read_csv(datapath, delimiter=";",header=0)
 
-    # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
-    # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
-    plt.figure(figsize=(8,5))
-    plt.errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy")
-    plt.errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1")
-    plt.xscale("log")
-    plt.title(title)
-    plt.xlabel("Subsampling ratio")
-    plt.ylabel("Accuracy/F1 score (%)")
-    plt.grid()
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(outfile)
+        vals = data.groupby("subsample_ratio").mean()
+        errs = data.groupby("subsample_ratio").std()
+
+        # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
+        # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
+        ax[i].errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,ls="--",marker="o",label="Accuracy")
+        ax[i].errorbar(vals.index,vals.f1,yerr=errs.f1,ls=":",marker="o",label="F1")
+        ax[i].grid()
+        ax[i].legend()
+
+    fig.tight_layout()
+    fig.savefig(outfile)
     # plt.show()
+    print("Done.")
 
 exit(0)
 

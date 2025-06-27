@@ -2,7 +2,8 @@
 \label{sec:results}
 In this section we'll look briefly at the results we got from each of the different techniques outlined in \autoref{sec:methods}.
 
-All the results were obtained 
+\paragraph{Execution notes.}
+All the results were obtained by running our program with about 16 GB of working memory and 1 core per instance. The system running our program was equipped with an Intel Xeon \footnote{The cluster on which we worked on, is more thoroughly described here: \url{https://docs.dei.unipd.it/en/CLUSTER/Overview}}. The runtime for a sweep on the selected subsample rates is on the order of a few hours.
 
 \subsection{Uniform subsampling}
 \begin{figure}[ht]
@@ -31,12 +32,17 @@ The first simple test was done selecting a random subset of genes. The results f
 \subsection{Annotated genes subsampling}
 \begin{figure}[ht]
     \begin{center}
-\includegraphics[width=5cm]{figures/subsample_ntissue_0.png}
-\includegraphics[width=5cm]{figures/subsample_ntissue_10.png}
-\includegraphics[width=5cm]{figures/subsample_ntissue_20.png}
+\includegraphics[width=\textwidth]{figures/subsample_annotated.png}
     \end{center}
 \caption{Plots of the accuracy and F1 scores while using only genes with given tissue number, on the $x$-axis there is the subsampling rate.}
 \label{fig:res3}
+\end{figure}
+\begin{figure}[ht]
+    \begin{center}
+\includegraphics[width=\textwidth]{figures/subsample_ntissue.png}
+    \end{center}
+\caption{Plots of the accuracy and F1 scores while using only genes with given tissue number, on the $x$-axis there is the subsampling rate.}
+\label{fig:res4}
 \end{figure}
 
 \subsection{Considerations on the results}

@@ -1,33 +1,35 @@
 \section{Results}
 \label{sec:results}
-In this section we'll look briefly at the results we got from each of the different techniques outlined in \autoref{sec:methods}.
+In this section we'll look at the results we got from each of the different techniques outlined in \autoref{sec:methods}.
 
 \paragraph{Execution notes.}
-All the results were obtained by running our program with about 16 GB of working memory and 1 core per instance. The system running our program was equipped with an Intel Xeon \footnote{The cluster on which we worked on, is more thoroughly described here: \url{https://docs.dei.unipd.it/en/CLUSTER/Overview}}. The runtime for a sweep on the selected subsample rates is on the order of a few hours.
+All the results were obtained by running our program with about 16 GB of working memory and 1 core per instance. The system running our program was equipped with an Intel Xeon \footnote{The cluster we worked on, is more thoroughly described here: \url{https://docs.dei.unipd.it/en/CLUSTER/Overview}}. The runtime for a sweep on the selected subsample rates is on the order of a few hours.
 
-\subsection{Uniform subsampling}
-\begin{figure}[ht]
-    \begin{center}
-\includegraphics[width=8cm]{figures/subsample_plot.png}
-    \end{center}
+\subsection{Subsampling on the whole genome}
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+\includegraphics[width=\columnwidth]{figures/subsample_plot.png}
 \caption{Plot of the accuracy and F1 scores when subsampling uniformly on the whole genome.}
+\label{fig:res1a}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+\includegraphics[width=\columnwidth]{figures/uniform_sample_low_ratio.png}
+\caption{Plot of the accuracy and F1 scores when subsampling uniformly on each chromosome.}
+\label{fig:res1b}
+    \end{subfigure}
+\caption{Plots of scores while subsampling the whole genome.}
 \label{fig:res1}
 \end{figure}
 
-The first simple test was done selecting a random subset of genes. The results for each subsampling rate are shown in \autoref{fig:res1}.
+The first simple tests were done selecting a random subset of genes among all the SNPs that we had. The results for each subsampling rate are shown in \autoref{fig:res1}.
+These plots show a mostly flat picture, both for the accuracy and F1 score there isn't a definite trend or variation as a function of the subsampling rate.
 
+The only exception to this is \autoref{fig:res1a}, that shows a diminishing trend with the smallest subsampling rates. Nevertheless both of the last two data points are compatible with the middle points.
 
-
-
-\subsection{Subsampling uniform on chromosomes}
-\begin{figure}[ht]
-    \begin{center}
-\includegraphics[width=8cm]{figures/uniform_sample_low_ratio.png}
-% \includesvg[inkscapeformat=png,width=8cm]{figures/uniform_sample_low_ratio.svg}
-    \end{center}
-\caption{Plot of the accuracy and F1 scores when subsampling uniformly on each chromosome.}
-\label{fig:res2}
-\end{figure}
+Note that the values at subsampling rate $1 = 10^0$ are the same in the two plots of \autoref{fig:res1]}. This single values could be slightly lower than the other values just because of random variation in the testing setup.
 
 \subsection{Annotated genes subsampling}
 \begin{figure}[ht]

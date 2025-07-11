@@ -27,10 +27,11 @@ for group, suptitle, outfile in groups:
         ax[i].set_xlabel("Subsampling ratio")
         ax[i].set_ylabel("Accuracy/F1 score (%)")
         print(f"Working on {datapath}...")
-        data = pd.read_csv(datapath, delimiter=";",header=0)
+        data = pd.read_csv(datapath, delimiter=";")
 
-        vals = data.groupby("subsample_ratio").mean()
-        errs = data.groupby("subsample_ratio").std()
+        data1 = data.sort_values(by=["subsample_ratio","iteration"]).groupby(["subsample_ratio","iteration"]).mean()
+        vals = data1.groupby("subsample_ratio").mean()
+        errs = data1.groupby("subsample_ratio").std()
 
         # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
         # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")

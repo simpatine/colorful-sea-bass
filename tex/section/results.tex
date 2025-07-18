@@ -3,10 +3,13 @@
 In this section we'll look at the results we got from each of the different techniques outlined in \autoref{sec:methods}.
 
 \paragraph{Execution notes.}
-All the results were obtained by running our program with about 16 GB of working memory and 1 core per instance. The system running our program was equipped with an Intel Xeon \footnote{The cluster we worked on, is more thoroughly described here: \url{https://docs.dei.unipd.it/en/CLUSTER/Overview}}. The runtime for a sweep on the selected subsample rates is on the order of a few hours.
+All the results were obtained by running our program with about 16 GB of working memory and 1 core per instance. The system running our program was equipped with an Intel Xeon \footnote{The cluster we worked on, is more thoroughly described here: \url{https://docs.dei.unipd.it/en/CLUSTER/Overview}}. The runtime for a sweep on the selected subsample rates is on the order of a few hours. \\
+Though note that for different subsampling ratios memory requirements and runtime changed by over an order of magnitude in the extreme cases.
 
 % \paragraph{Evaluation metrics.} In this work we focused on the Accuracy and F1 scores.
 
+\paragraph{Baseline results.} To understand the improvement given by our proposed techniques, in every plot we compared our scores with some "baseline scores". These baseline scores are the score of a "trivial" classifier, that always reports the most common class.
+Our data samples were in 54.32\% of cases of one class, thus the baseline accuracy is this value.
 
 \subsection{Subsampling on the whole genome}
 \begin{figure}[ht!]
@@ -61,9 +64,11 @@ As before, these plots show a mostly flat picture, both for the accuracy and F1 
 
 \subsection{Considerations on the results}
 % Our results suck a lot.
-Overall the results do not show any meaningful trend. The most likely pattern to be inferred from our data is a flat trend, meaning that the scores and subsampling rates are nearly independent. This seems to hold outside the extreme ends of our sampled interval of subsampling rates.
+Overall the results do not show any meaningful trend. The most likely pattern to be inferred from our data is a flat trend, meaning that the scores and subsampling rates are nearly independent. This trend seems to hold well outside the extreme ends of our sampled interval of subsampling rates.
 
-Another simple observation that can be drawn from our results is that keeping only a very small subset of genes (in the order of tens or less) has a negative effect on the scores.
-This can be seen especially in the "Promoter" plot of \autoref{fig:res2a}, and could be a cause of the upwards trend on the left of \autoref{fig:res1a}.
+In fact, observing the lower extreme, a simple observation can be drawn from our results: keeping only a very small subset of genes (in the order of tens or less) has a negative effect on the scores.
+This can be seen especially in the "Promoter" plot of \autoref{fig:res2a} or in \autoref{fig:res1a}, but is probably the cause of the lower scores for lower subsampling rates in other plots. More extreme values of the subsampling rates have been tried and support this hypothesis, though the results are not included in this work.
+
+The flat trend could be ultimately a good thing: this could allow future experiments of better models, hyperparameters or techniques to use only a subsample of the data without losing quality in the results. This would enable the use more complex models and faster testing.
 
 

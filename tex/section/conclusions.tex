@@ -1,2 +1,12 @@
 \section{Conclusions}
 \label{sec:conclusions}
+
+We successfully experimented with a set of different techniques that subsample the dataset of SNPs and disease outcomes, maintaining each sampled individual while discarding some of the SNPs. In some cases we also used annotations given to SNPs, grouping by their function.
+
+We got interesting results, though they are not deeply unexpected: subsampling does not impact the accuracy or F\textsubscript{1} score of the disease outcome prediction;
+this is true if the subsampling rate is not extreme, when only very few genes are actually used thus inevitably limiting the actual quality of the predictions.
+
+Using a standard machine learning model as a black-box we didn't observe a statistically significant change in the prediction accuracy or F\textsubscript{1} score.
+If further supported, this fact can allow future experimentation of machine learning techniques on this kind of problem to be done on a subsampled version of the data, without a significant degradation of the quality of the results, but at a much increased speed.
+
+

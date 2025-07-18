@@ -19,8 +19,8 @@ for group, suptitle, outfile in groups:
     if len(group) == 1: ax = [ax]
     # fig.suptitle("Accuracy and F1 scores with random subsampling " + suptitle)
     for i,(datapath,title,vals) in enumerate(group):
-        ax[i].axhline(54.24, color="b", ls=":", label="Baseline Accuracy")
-        ax[i].axhline(200/((100/54.24) + (100/45.76)), color="r", ls=":", label="Baseline F1 score")
+        ax[i].axhline(54.24, color="rebeccapurple", ls=":", label="Baseline Accuracy")
+        ax[i].axhline(200/((100/54.24) + (100/45.76)), color="limegreen", ls=":", label="Baseline F1 score")
         ax[i].set_xscale("log")
         if title is not None:
             ax[i].set_title(title.format(**vals))
@@ -34,8 +34,8 @@ for group, suptitle, outfile in groups:
 
         # plt.semilogx(vals.index,vals.accuracy,"--",marker="",label="Accuracy")
         # plt.semilogx(vals.index,vals.f1,":",marker="",label="F1")
-        ax[i].errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,color="b",ls="--",marker="o",label="Accuracy", markersize=8, capsize=5)
-        ax[i].errorbar(vals.index,vals.f1,yerr=errs.f1,color="r",ls="--",marker="o",label="F1", markersize=8, capsize=5)
+        ax[i].errorbar(vals.index,vals.accuracy,yerr=errs.accuracy,color="rebeccapurple",ls="--",marker="o",label="Accuracy", markersize=8, capsize=5)
+        ax[i].errorbar(vals.index,vals.f1,yerr=errs.f1,color="limegreen",ls="--",marker="o",label="F1", markersize=8, capsize=5)
         ax[i].grid()
         ax[i].legend()
 

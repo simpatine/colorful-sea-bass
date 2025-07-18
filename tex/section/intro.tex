@@ -1,12 +1,20 @@
 \section{Introduction}
 \label{sec:intro}
-The use of genomes to predict the effects of disease has been largely celebrated.
-But actually finding such links is usually not easy, and an automatic data-driven technique to predict disease outcome would be very useful.
+The study of the impact of single nucleotide polymorphisms SNPs on the effects of diseases has been largely celebrated. 
+However, actually finding such links is usually not easy, and an automatic data-driven technique to predict disease outcome would be very useful.
 Given the size of genomes it is not always easy to understand the genes that have an phenotype related to the disease effects.
-The size of the datasets hinders the efficacy of standard machine-learning techniques, as few example genomes are available but each is composed of hundreds of thousands of bases, if not many millions.
+In most cases the SNPs have little to no effect on the mortality of a population to a given disease, and only a few portion of them exerts any difference.
+Moreover, the size of the datasets hinders the efficacy of standard machine-learning techniques, as few example genomes are available but each is composed of hundreds of thousands of bases, if not many millions.
 
 % TODO: aggiungere BRANZINI (con immagine)
+We are dealing with a sea-bass population suffering from viral nervous necrosis (VNN), which is a highly spread disease among sealife.
+The broad goal of this work is to asses the impact that SNPs in the sea-bass genome have on the mortality of fishes after the contraption of VNN.
+SNPs might increment or decrement che chance of a fatal outcome. 
+We would be satisfied with a model that given the SNPs of a sea-bass which has got VNN, correctly predicts if the fish will die or not with high probability.
+Commonly used models come from machine learning, we focus on the XGBoost classifier.
 
-The scope of this work is to experiment with some simple random subsampling techniques. The idea is to keep only a subset of the genome bases while keeping all the individual genomes sequenced.
-The hope is that this will allow a standard machine-learning algorithm to better understand the structure and importance of the gene with respect to the disease outcome.
+However, training a model on the whole genome might be overkill as the resulting model might suffer from overfitting.
+Specifically, in this work we experiment with some simple random subsampling techniques.
+The idea is to keep only a subset of the genome bases while keeping all the individual genomes sequenced.
+The hope is that this will allow a standard machine-learning algorithm to better understand the structure and importance of the mutations with respect to the disease outcome.
 

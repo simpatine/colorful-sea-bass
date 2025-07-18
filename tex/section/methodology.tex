@@ -1,40 +1,101 @@
 \section{Methodology}
 \label{sec:methods}
-We tried to evaluate the effectiveness of random subsampling of genes in improving predictions of mortality.
+For each of our experiments we followed a common pipeline:
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        node distance=1.8cm and 0.6cm,
+        every node/.style={font=\small},
+        box/.style={draw, rectangle, rounded corners, minimum height=1cm, minimum width=2.6cm, align=center},
+        group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
+    ]
+
+    \node[box] (features) {Features \\ (SNP Matrix)};
+    \node[box, below=of features] (annotation) {Functional \\ Annotations};
+    \node[box, below=of annotation] (mortality) {Mortality \\ Labels};
+
+    \node[group, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
+
+    \node[box, right=1.5cm of features] (uniform) {Uniform};
+    \node[box, below=1cm of uniform] (chr) {Per-Chromosome};
+    \node[box, below=1cm of chr] (annot) {Annotation-Based};
+
+    \node[group, fit=(uniform)(chr)(annot), label=above:{\textbf{Subsampling}}] (subsampling_group) {};
+
+    \node[box, right=1.5cm of uniform] (split) {Train/Test Split};
+    \node[box, right=1.5cm of split] (xgboost) {XGBoost Training};
+    \node[box, below=of xgboost] (evaluate) {Evaluation};
+
+    \draw[->] (features.east) -- ++(0.4,0) |- (uniform.west);
+    \draw[->] (features.east) -- (chr.west);
+    \draw[->] (features.east) -- (annot.west);
+
+    \draw[->] (annotation.east) -- ++(0.7,0) |- (annot.west);
+
+    \draw[->] (uniform.east) -- ++(0.4,0) |- (split.west);
+    \draw[->] (chr.east) -- (split.west);
+    \draw[->] (annot.east) -- (split.west);
+
+    \draw[->, thick] (mortality.east) -| (split.south);
+
+    \draw[->] (split.east) -- (xgboost.west);
+    \draw[->] (split.east) -- (evaluate.west);
+    \draw[->] (xgboost.south) -- (evaluate.north);
+
+    \end{tikzpicture}
+    \caption{Pipeline of the model training after subsampling of the data}
+    \label{fig:pipeline}
+\end{figure}
+
+
+Here we describe the details.
+
 
 \subsection{Dataset}
-% features.csv
-The main dataset we used was a table filled with the genome of $990$ individual sea basses.
-The sequenced genome at our disposal was made up of $6072853$ individual genes. % TODO: non sono geni, ma mutazioni
 
-% TODO: mortality.csv
+The main dataset we used was a table characterising SNPs of $990$ individual sea basses. We call it the \textbf{features} dataset.
 
-In addition to the set of genes for some individuals, we had a set of annotated genes.
-For a subset of genes some further information is known: a function (either \texttt{Open\_chromatin}, \texttt{Enhancer} or \texttt{Promoter}) and a tissue number (between $0$ and $25$).
+Each row of the features dataset represents a sea bass, whilst each column represents a nucleotide in the genome.
+In each cell of this grid we save the SNP information of the corresponding individual on the corresponding nucleotide: 0 if there are no mutations, 1 if only one of the nucleotides of the chromosome pair is mutated and 2 if both the nucleotides are mutated.
 
-\subsection{Data pipeline}
-\begin{enumerate}
-    \item Subsampling. The idea is to help our estimator to not get lost in the $\sim 10^6$ genes, but allowing it to work with only a smaller number of genes at a time. This step is thourghly explained in \autoref{sec:subsample}
-    \item Train-test split.
-    \item Training. Once we subsampled the dataset,  we used the \texttt{XGBoost}\cite{xgboost} library to construct a predictor in a fast and easy manner. We always used the parameter \texttt{method="hist"}, as we didn't find any meaningful difference between the options and this offers the widest compatibility across devices.
-    \item Evaluation.
-\end{enumerate}
-randomisation...
+% TODO: Latex example table of the features set
 
-\subsection{Subsampling techniques}
-\label{sec:subsample}
-We always subsampled selecting a subset of genes in the whole dataset.
+Of each nucleotide we know the chromosome that it belongs to.
 
+Paired with the features dataset we have a \textbf{mortality} dataset. 
+It stores for each sea bass if it died or not after the contraption of VNN.
+
+In addition to these two datasets, we had a set of \textbf{annotated} nucleotides.
+These are special nucleotides for which further information is known on their role in the sea bass genome.
+This information comes in the form of a function (either \texttt{Open\_chromatin}, \texttt{Enhancer} or \texttt{Promoter}) and a tissue number (between $0$ and $25$).
+
+
+\subsection{Subsampling}
+
+The subsampling is done over the nucleotides, meaning that each individual remains in the dataset but we consider only a random subset of its nucleotides.
+
+We introduce the \textbf{subsampling ratio} $p$ parameter, which just specifies the ratio of nucleotides to be randomly selected over the available ones.
+
+We then find three main subsampling techniques to apply to our features dataset.
 
 \paragraph{Uniform subsampling.}
-The first and simplest thing we tried was to randomly and uniformly subsample the genes on the entire genome.
-We selected a given fraction of the genes, keeping or discarding each gene with fixed and uniform probability.
+The first and simplest thing we tried was to randomly and uniformly subsample the nucleotides on the entire genome.
+Given $p$, we find the number of nucleotides to be subsampled by multiplying $p$ by the number of nucleotides.
+Then we uniformly subsample that number of nucleotides.
 
 \paragraph{Uniform subsampling on chromosomes.}
-A second possibility is to uniformly and randomly sample a fixed number of genes on each chromosome.
-
-\subsection{Annotated genes}
-Using the additional information at our disposal we used only a subset of annotated genes. Among these we further subsampled to obtain a small feature set.
+One observation that could be made with the previous method is that it could select a really high number of nucleotides present in a chromosome while next to no one from another. 
+So the importance that chromosomes might have in the information given to the learning model is not captured. 
+We can constrain the subsampling to take from each chromosome the same number of nucleotides uniformly at random, getting a subsampling tecnique that balances each chromosome contribution in the training set.
 
 \paragraph{Subsampling using annotations.}
-Some genes have been linked to specific organs, tissues or functions. This information can be used to select and sample genes with only some function or organ and subsample among these.
+We could also make use of the further informations that we have on the annotated nucleotides.
+Specifically, we could only select nucleotides that have a specific function or such that the number of tissues that influences falls into some range.
+Then we could uniformly subsample among these selected nucleotides as before.
+
+
+\subsection{Training and testing}
+
+After the subsampling we need to train and test our model on the resulting data. 
+We split the population in two sets (training and testing), then we train xgboost on the training set and find out if the resulting model has predictive power on the test set.

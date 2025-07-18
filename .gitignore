@@ -189,4 +189,9 @@ datasets/
 *.fls
 *.fdb_latexmk
 tmp/
+*.bbl 
+*.bcf 
+tex/main.out
+tex/main.run.xml 
+tex/main.synctex.gz
 

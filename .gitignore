@@ -191,6 +191,7 @@ datasets/
 tmp/
 *.bbl 
 *.bcf 
+*.blg
 tex/main.out
 tex/main.run.xml 
 tex/main.synctex.gz

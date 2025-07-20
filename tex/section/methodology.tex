@@ -54,12 +54,29 @@ Here we describe the details.
 
 \subsection{Dataset}
 
-The main dataset we used was a table characterising SNPs of $990$ individual sea basses. We call it the \textbf{features} dataset.
+The main dataset we used was a table characterising SNPs of $990$ individual sea basses, each sea bass having $6072853$ nucleotides included. We refer to it as the \textbf{features} dataset.
 
-Each row of the features dataset represents a sea bass, whilst each column represents a nucleotide in the genome.
-In each cell of this grid we save the SNP information of the corresponding individual on the corresponding nucleotide: 0 if there are no mutations, 1 if only one of the nucleotides of the chromosome pair is mutated and 2 if both the nucleotides are mutated.
+Each row of the features dataset corresponds to a sea bass, and each column corresponds to a specific nucleotide in the genome.
+The values in the table represent SNPs. Each value can be a number from 0 to 2, representing the number of alleles mutated for that particular sea bass in that specific nucleotide position:
+\begin{itemize}
+    \item 0: no mutation (homozygous reference),
+    \item 1: one allele mutated (heterozygous),
+    \item 2: both alleles mutated (homozygous alternate).
+\end{itemize}
 
-% TODO: Latex example table of the features set
+\begin{table}[H]
+    \centering
+    \caption{Example rows from the SNP features dataset. Each cell denotes a genotype value at a specific nucleotide.}
+    \label{tab:features_example}
+    \begin{tabular}{l|cccc}
+        \textbf{features} & CAJNNU010000001.1:299 & CAJNNU010000001.1:903 & CAJNNU010000001.1:986 & $\dots$ \\
+        \hline
+        PL04-A06 & 0 & 1 & 2 & $\dots$ \\
+        PL04-A07 & 1 & 0 & 1 & $\dots$ \\
+        PL04-A08 & 2 & 2 & 0 & $\dots$ \\
+        $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\ddots$
+    \end{tabular}
+\end{table}
 
 Of each nucleotide we know the chromosome that it belongs to.
 

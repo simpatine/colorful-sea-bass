@@ -97,7 +97,7 @@ We then find three main subsampling techniques to apply to our features dataset.
 
 \paragraph{Uniform subsampling.}
 The first and simplest thing we tried was to randomly and uniformly subsample the nucleotides on the entire genome.
-Given $p$, we find the number of nucleotides to be subsampled by multiplying $p$ by the number of nucleotides.
+Given $p$, we find the number of nucleotides to be subsampled by multiplying $p$ by the number of nucleotides, rounding down.
 Then we uniformly subsample that number of nucleotides.
 
 \paragraph{Uniform subsampling on chromosomes.}
@@ -107,11 +107,15 @@ We can constrain the subsampling to take from each chromosome the same number of
 
 \paragraph{Subsampling using annotations.}
 We could also make use of the further informations that we have on the annotated nucleotides.
-Specifically, we could only select nucleotides that have a specific function or such that the number of tissues that influences falls into some range.
-Then we could uniformly subsample among these selected nucleotides as before.
+Specifically, we restrict the pool of SNPs to those with certain annotations (e.g., only \texttt{Enhancer} regions) or within a desired tissue number range. From this filtered pool, we then apply uniform subsampling as before.
 
 
 \subsection{Training and testing}
 
 After the subsampling we need to train and test our model on the resulting data. 
 We split the population in two sets (training and testing), then we train xgboost on the training set and find out if the resulting model has predictive power on the test set.
+
+The individuals used for training and testing are fixed before subsampling the nucleotides. This is made in order to reduce the statistical perturbation that might come from another random procedure.
+We also fixed the seed of XGBoost, although we don't expect this to make any change on the variance, as the inputs given to the model change with every subsampling.
+
+Since we are dealing with random processes, for each subsampling method and ratio we ran and evaluated multiple instances, taking mean an variance of the scores.

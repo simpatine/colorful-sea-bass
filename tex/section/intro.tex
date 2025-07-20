@@ -7,11 +7,11 @@ In most cases the SNPs have little to no effect on the mortality of a population
 Moreover, the size of the datasets hinders the efficacy of standard machine-learning techniques, as few example genomes are available but each is composed of hundreds of thousands of bases, if not many millions.
 
 % TODO: aggiungere BRANZINI (con immagine)
-We are dealing with a sea-bass population suffering from viral nervous necrosis (VNN), which is a highly spread disease among sealife.
+We are dealing with a sea-bass population suffering from viral nervous necrosis (VNN) \cite{faldani2025machine}, which is a highly spread disease among sealife.
 The broad goal of this work is to asses the impact that SNPs in the sea-bass genome have on the mortality of fishes after the contraption of VNN.
 SNPs might increment or decrement che chance of a fatal outcome. 
 We would be satisfied with a model that given the SNPs of a sea-bass which has got VNN, correctly predicts if the fish will die or not with high probability.
-Commonly used models for this task come from machine learning: we focus on the XGBoost classifier\cite{xgboost}.
+Commonly used models for this task come from machine learning: we focus on the XGBoost classifier \cite{xgboost}.
 
 However, training a model on the whole genome might make the resulting model suffer from overfitting.
 Specifically, in this work we experiment with some simple random subsampling techniques.

@@ -18,21 +18,6 @@
 \newcommand{\B}[2]{\mathcal{B}_{#1}\left(#2\right)}
 \newcommand{\todo}[1]{{\color{red}#1}}
 
-\newtcolorbox{myBox}{
-tcbox width=auto limited,
-capture=hbox,
-colframe=red!100,
-colback=red!10
-}
-
-\newcommand{\myBoxWrapper}[1]{
-\begin{center}
-    \begin{myBox}
-        #1
-    \end{myBox}
-\end{center}
-}
-
 % Use Unipd as theme, with options:
 % - pageofpages: define the separation symbol of the footer page of pages (e.g.: of, di, /, default: of)
 % - logo: position another logo near the Unipd logo in the title page (e.g. department logo), passing the second logo path as option 
@@ -65,21 +50,17 @@ colback=red!10
 \frame{\titlepage}
 
 \begin{frame}{Agenda}
-    \begin{itemize}
-        \item Introduction
-        \item Methods
-        \item Results 
-        \item Conclusions 
-    \end{itemize}
+    \tableofcontents
 \end{frame}
 
-
+\section{Introduction}
 \begin{frame}{Introduction}
 \end{frame}
 
 \begin{frame}{Methodology: subsampling}
 \end{frame}
 
+\section{Results}
 \begin{frame}{Results}
 \end{frame}
 
@@ -124,6 +105,7 @@ colback=red!10
 \end{figure}
 \end{frame}
 
+\section{Conclusions}
 \begin{frame}{Conclusions}
 \end{frame}
 

@@ -192,7 +192,10 @@ tmp/
 *.bbl 
 *.bcf 
 *.blg
-tex/main.out
-tex/main.run.xml 
-tex/main.synctex.gz
+*main.out
+*main.run.xml 
+*main.synctex.gz
+*.nav
+*.snm
+*.toc
 

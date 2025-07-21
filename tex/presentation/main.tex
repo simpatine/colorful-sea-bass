@@ -1,0 +1,1344 @@
+
+
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+%\usepackage[T1]{fontenc}
+%\usepackage[utf8]{inputenc}
+%\usepackage[english]{babel}
+%\usepackage{lmodern}
+\usepackage{comment}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage[linesnumbered,ruled,vlined,noend,algo2e]{algorithm2e}
+\usepackage{tcolorbox}
+
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\B}[2]{\mathcal{B}_{#1}\left(#2\right)}
+\newcommand{\todo}[1]{{\color{red}#1}}
+
+\newtcolorbox{myBox}{
+tcbox width=auto limited,
+capture=hbox,
+colframe=red!100,
+colback=red!10
+}
+
+\newcommand{\myBoxWrapper}[1]{
+\begin{center}
+    \begin{myBox}
+        #1
+    \end{myBox}
+\end{center}
+}
+
+% Use Unipd as theme, with options:
+% - pageofpages: define the separation symbol of the footer page of pages (e.g.: of, di, /, default: of)
+% - logo: position another logo near the Unipd logo in the title page (e.g. department logo), passing the second logo path as option 
+% Use the environment lastframe to add the endframe text
+\usetheme[pageofpages=of]{Unipd}
+\usefonttheme[onlymath]{serif}
+
+\title{Density Based Clustering: a critical appraisal of DBSCAN}
+\subtitle{}
+\author[Simone Moretti]{Simone Moretti}
+
+\date{May 2025 \\ {\small Mentor: Andrea Pietracaprina}}
+
+% The next block of commands puts the table of contents at the beginning of each section and highlights the current section
+
+\begin{comment}
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Table of Contents}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+\end{comment}
+
+
+\begin{document}
+
+% Make the title page
+\frame{\titlepage}
+
+\begin{frame}{Roadmap}
+
+    \centering Let me take you on a trip through the history of DBSCAN!
+
+    \vspace{0.3cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{climbing_rock_mountain_climber_excursion_hiking_carega_pojesi-871204-2737140367.jpg}
+    \end{figure}
+
+\end{frame}
+
+\begin{comment}
+% Insert the general toc
+\begin{frame}{Table of Contents}
+    \tableofcontents    
+\end{frame}
+\end{comment}
+
+\begin{frame}{Clustering}
+
+    Group objects into \textbf{clusters}:
+
+    \begin{itemize}
+        \item Similar objects in the same cluster
+        \item Different objects in different clusters
+    \end{itemize}
+
+    
+
+    \vspace{0.3cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{Clustering_Generale.png}
+    \end{figure}
+
+    
+\end{frame}
+
+
+\begin{frame}{Clustering on Metric Spaces}
+
+    \begin{itemize}
+        \item \textbf{Input}: a set $S$ of points in a \textbf{metric space}.
+        \item \textbf{Output}: a clustering of the points based on their pairwise \textbf{distance} $d$ (computable in $O(1)$).
+    \end{itemize}
+    \begin{minipage}[c]{0.4\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{distance_between_two_points.png}
+        \end{figure}
+    \end{minipage}
+    \begin{minipage}[c]{0.55\textwidth}
+    \begin{tcolorbox}
+        \begin{itemize}
+            \item $d(x, y) \ge 0$
+            \item $d(x,y) = 0 \iff x = y$
+            \item $d(x,y) = d(y,x)$
+            \item $d(x,y)\le d(x,z) + d(y,z)$
+        \end{itemize}
+    \end{tcolorbox}
+    \end{minipage}
+
+
+\end{frame}
+\begin{comment}
+    
+
+
+\begin{frame}{Clustering Types}
+
+Numerous types of clustering:
+
+\begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{clusteringtypes.jpg}
+        \label{fig:enter-label}
+    \end{figure}
+
+        Focus of the presentation: \textbf{density-based} ones.\\
+
+    \vspace{0.5cm}
+
+\end{frame}
+\end{comment}
+
+\begin{frame}{Example: $k$-Means Clustering}
+
+\begin{minipage}[c]{0.60\textwidth}
+    Choose $k$ \textbf{centers} $\mathcal{C}=\{c_1,\dots,c_k\}$ in order to \textbf{minimize}:
+   
+    \[
+        \sum_{x\in S} d(x,\mathcal{C})^2
+    \]
+
+    \vspace{0.3cm}
+    \textbf{Clustering}: points assigned to their nearest center.
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.35\textwidth}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.75\linewidth]{k-means_unclustered.png}
+    \end{figure}
+    \begin{center}
+        $\big\Downarrow$ $k$ = 3
+    \end{center}
+    \centering \includegraphics[width=0.75\linewidth]{k_means.png}
+
+    
+    
+\end{minipage}
+
+    
+\end{frame}
+
+\begin{comment}
+\begin{frame}{Example: $k$-Means Clustering}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{kMeans.png}
+    \caption{$k$-Means Clustering with $k=3$}
+    \label{fig:enter-label}
+\end{figure}
+\end{frame}
+\end{comment}
+
+\begin{frame}{Example: $k$-Means Clustering}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{Noisy_moons.png}
+    \end{figure}
+
+\end{frame}
+
+\begin{frame}{Example: $k$-Means Clustering}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{Noisy_moons_kMeans.png}
+    \end{figure}
+    \begin{center}
+        \textit{Optimal $k$-Means clustering with $k=2$}
+    \end{center}
+\end{frame}
+
+\begin{comment}
+\begin{frame}{$k$-Means Clustering Problems}
+
+    But wait, how do we cluster these sets? Clearly the previously cited algorithms perform badly.
+    
+\end{frame}
+
+
+\end{comment}
+
+\begin{frame}{Alternative Clustering}
+    \centering Cluster together points that are \textbf{very close} to each other.
+
+\vspace{0.3cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.57\linewidth]{Noisy_moons.png}
+    \end{figure}
+   
+\end{frame}
+
+\begin{frame}{$\epsilon$-Neighbors}
+   \centering Fix parameter $\epsilon\in\mathbb{R}_{>0}$. Points $x_1$ and $x_2$ are \textbf{$\mathbf{\epsilon}$-neighbors} if $d(x_1, x_2) \le \epsilon$.
+
+\vspace{0.5cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{neighboring.png}
+    \end{figure}
+    
+\end{frame}
+
+\begin{frame}{Alternative Clustering}
+
+\begin{minipage}[c]{0.50\textwidth}
+    Create undirected \textbf{graph} $G_\epsilon = (V,E_\epsilon)$.
+    \begin{itemize}
+        \item $V$ is the set $S$.
+        \item An \textbf{edge} $\{x_1,x_2\}\in E_\epsilon$ if $x_1$ and $x_2$ are $\epsilon$-\textbf{neighbors}.
+    \end{itemize}
+\end{minipage}
+\begin{minipage}[c]{0.05\textwidth}
+    
+\end{minipage}
+\begin{minipage}[c]{0.45\textwidth}
+    \begin{center}
+        \includegraphics[width=0.95\linewidth]{Noisy_moons_graph.png}
+        
+         \textit{Graph $G_\epsilon$ for a suitable $\epsilon$}
+        \end{center}
+\end{minipage}
+    
+\end{frame}
+
+\begin{frame}{Alternative Clustering}
+    \centering Clusters of $G$ are its \textbf{connected components}!
+
+    \vspace{0.3cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.57\linewidth]{Connected_Components.png}
+    \end{figure}
+\end{frame}
+
+
+\begin{emptyframe}
+    Thank you!\\
+    Any questions?
+\end{emptyframe}
+
+\begin{frame}{Alternative Clustering}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{Noisy_connected.png}
+        \label{fig:enter-label}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Alternative Clustering}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\linewidth]{noisy_component_one.png}
+        \label{fig:enter-label}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Density Based Clustering}
+
+    Solution: \textbf{Density Based Clustering}.
+
+    \vspace{0.3cm}
+
+    \begin{minipage}[b]{0.20\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{martin_ester(1).jpg}
+        \end{figure}
+        \centering Martin Ester
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.20\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{hans_kriegel(1).jpg}
+        \end{figure}
+        \centering H.-P. Kriegel
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.20\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{joerg-sander(1).jpg}
+        \end{figure}
+        \centering Jörg Sander
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.20\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{Xiaowei_Xu(1).jpg}
+        \end{figure}
+        \centering Xiaowei Xu
+    \end{minipage}
+
+    \vspace{0.5cm}
+
+    \textbf{DBSCAN} (1996)\cite{original_paper}: Density-Based Spatial Clustering of Applications with Noise.
+\end{frame}
+
+
+\begin{frame}{Density}
+    
+    A \textbf{ball} of radius $\epsilon$ centered around $x\in X$ is: \[\B{\epsilon}{x} = \{y\in X:d(x,y)\le\epsilon\}\]
+    
+    For parameter $MinPts\in\mathbb{Z}_{>0}$ and dataset $S$ a ball of radius $\epsilon$ is \textbf{dense} if it contains \textbf{at least} $MinPts$ points in $S$.
+
+    \vspace{0.3cm}
+    
+  \centering
+  \begin{minipage}[b]{0.45\textwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.45\linewidth]{denseball.png}
+        \label{fig:enter-label}
+    \end{figure}
+    \begin{center}
+        \textit{Dense ball}
+    \end{center}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.45\textwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.45\linewidth]{Nondenseball.png}
+        \label{fig:enter-label}
+    \end{figure}
+    \begin{center}
+        \textit{Non-dense ball}
+    \end{center}
+  \end{minipage}
+  
+
+    \raggedleft\footnotesize $MinPts=5$
+
+    
+\end{frame}
+\begin{comment}
+\begin{frame}{What is density?}
+    We need to formalize the concept of density by some definitions:
+
+    \begin{itemize}
+        \item In a metric space $(X,d)$, a \textbf{ball} of radius $\epsilon$ centered around the point $x\in X$ is the set of points $\{y\in X:d(x,y)\le\epsilon\}$.
+        \item Given $\epsilon\in\R$ and $MinPts\in\N$, we say that a ball of radius $\epsilon$ is \textbf{dense} if it contains at least $MinPts$ points.
+        \item We also say that two points at distance $\le\epsilon$ are \textbf{neighbors}.
+    \end{itemize}
+    
+\end{frame}
+\end{comment}
+
+\begin{frame}{Core, Border and Noise points}
+    \noindent
+    \begin{minipage}[t]{0.3\textwidth}
+        
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{corepoint.png}
+        \end{figure}
+        
+        A point $x$ is a \textbf{core point} if $\B{x}{\epsilon}$ is \textbf{dense}.
+        
+    
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{border.png}
+        \end{figure}
+
+        A point $x$ is a \textbf{border point} if $\B{x}{\epsilon}$ is \textbf{not dense} and it neighbors a core point.
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.3\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{noisepoint.png}
+        \end{figure}
+        
+        A point $x$ is a \textbf{noise point} if it is neither a core point or a border one.
+        
+    \end{minipage}
+
+\vspace{1.1cm}
+
+    
+    \raggedleft\footnotesize $MinPts=5$
+    
+
+\end{frame}
+
+\begin{comment}
+    \begin{frame}{DBSCAN Clustering}
+
+   DBSCAN clusters are based on the connected components of graph $G$ made of \textbf{core points}.
+
+    \vspace{0.5cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{corepointsconnectedcomp.png}
+        \label{fig:enter-label}
+    \end{figure}
+    
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    Clusters should also contain \textbf{border points} adjacent to their core points.
+    \vspace{0.5cm}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{dbscan_add_border_points.png}
+    \end{figure}
+    
+\end{frame}
+\end{comment}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{Noisy_moons_graph_2.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        1. Find the \textbf{graph} $G$ of $\epsilon$ neighbors.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{allcorepoints.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        2. Find all \textbf{core points}.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{corepointsconnectedcomp.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        3. Find \textbf{connected components} made of core points.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{dbscan_add_border_points.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        4. Add \textbf{border points} and return the \textbf{clusters} found.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{Noise points}
+
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+        \centering
+        \includegraphics[width=0.9\linewidth]{DBSCAN_noisy_points.png}
+    \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        \textbf{Noise points} will be left unclustered.
+    \end{minipage}    
+    
+\end{frame}
+
+\begin{comment}
+\input{exact}
+\end{comment}
+
+\begin{frame}{Border Points}
+   \centering Border points are part of \textbf{every cluster} adjacent to them.
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{Exact/border_problem.png}
+    \end{figure}
+
+   \centering This ensures that the clustering is \textbf{unique} (for fixed $\epsilon$ and  $MinPts$).
+\end{frame}
+
+
+\begin{frame}{Region Query}
+
+    Find out neighbors of point $x$: \textbf{regionQuery}($x$,$\epsilon$).\\
+
+    \vspace{0.5cm}
+
+    Trivial implementation:
+
+    \vspace{0.5cm}
+
+    \begin{algorithm2e}[H] 
+\SetAlgoLined
+    $neighbors\leftarrow\emptyset$
+    
+    \For{$q\in S$}{
+        \If{$d(x,q)\le\epsilon$}{
+            $neighbors\leftarrow neighbors\cup\{q\}$
+        }
+    }
+    \Return{$neighbors$}
+    
+\caption{$\textsc{regionQuery}(x, \epsilon)$} %\label{alg:regionQuery}
+\end{algorithm2e}
+
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{Noisy_moons_graph_2.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        {\color{gray}1. Find the \textbf{graph} $G$ of $\epsilon$ neighbors.}\\
+        We compute regionQuery on each point to find all edges of $G$.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{allcorepoints.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        {\color{gray}2. Find all \textbf{core points}.}\\
+        A point $x$ is a core point iff $|regionQuery(x,\epsilon)|\ge MinPts$.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{corepointsconnectedcomp.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        {\color{gray}3. Find \textbf{connected components} made of core points.}\\
+        Finding connected components is linear on the size of the graph using BFS.
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{DBSCAN Clustering}
+    \begin{minipage}[c]{0.55\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{dbscan_add_border_points.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.44\textwidth}
+        {\color{gray}4. Add \textbf{border points} and return the \textbf{clusters} found.}\\
+        Find border points by checking if unclustered points neighbor a core point.
+    \end{minipage}
+\end{frame}
+
+\begin{comment}
+\begin{frame}{DBSCAN Algorithm using regionQuery}
+    \begin{minipage}[c]{0.44\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{Noisy_moons_graph_2.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.5\textwidth}
+        {\color{gray}1. Find the \textbf{graph} $G$ of $\epsilon$ neighbors.}\\
+        We compute regionQuery on each point to find all edges of $G$.
+    \end{minipage}
+
+    \begin{minipage}[c]{0.44\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{allcorepoints.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.5\textwidth}
+        {\color{gray}2. Find all \textbf{core points}.}\\
+        A point $x$ is a core point iff $|regionQuery(x,\epsilon)|\ge MinPts$.
+    \end{minipage}
+
+
+    
+\end{frame}
+
+\begin{frame}{DBSCAN Algorithm using regionQuery}
+
+    \begin{minipage}[c]{0.44\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{corepointsconnectedcomp.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.5\textwidth}
+        {\color{gray}3. Find \textbf{connected components} made of core points.}\\
+        Finding connected components is linear on the size of the graph using BFS.
+    \end{minipage}
+
+
+    \begin{minipage}[c]{0.44\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{dbscan_final.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.5\textwidth}
+        {\color{gray}4. Add \textbf{border points} and return the \textbf{clusters} found.}\\
+        Find border points by checking if unclustered points neighbor a core point.
+    \end{minipage}
+
+    
+\end{frame}
+\end{comment}
+
+\begin{frame}{Running Time}
+    Running time bounded by the calls of the regionQuery function:
+    \begin{itemize}
+        \item Every point calls regionQuery a costant number of times.
+        \item The trivial implementation runs in $O(n)$ ($n:=|S|$).
+    \end{itemize}
+
+    \vspace{0.5cm}
+
+    \textbf{Total running time}: \[\Large{O(n^2)}\]
+\end{frame}
+
+\begin{frame}{Running Time}
+    Original authors claimed an implementation of regionQuery using \textbf{R*-trees} that runs in $O(\log n)$ on average. \textbf{Total running time}:
+    \[
+        O(n\log n)
+    \]
+
+    \vspace{0.3cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.67\linewidth]{R-tree.png}
+    \end{figure}
+    \begin{center}
+        \textit{R*-tree}
+    \end{center}
+
+\end{frame}
+
+\begin{frame}{Running Time}
+    Claim \textbf{not rigorous}, from later studies we now know that:
+    \begin{itemize}
+        \item On $\mathbb{E}^d$ ($d\ge3)$ DBSCAN is as \textbf{hard as USEC} (likely $\Omega(n^{4/3})$).
+        \item On $\mathbb{E}^d$ ($d\ge5)$ DBSCAN is as \textbf{hard as Hopcroft} (likely $\Omega(n^{4/3})$).
+        \item On non Euclidean spaces things might be even more complicated.
+    \end{itemize}
+
+\vspace{0.5cm}
+
+    \begin{minipage}[c]{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.65\linewidth]{usec.png}
+        \end{figure}
+        \begin{center}
+            \footnotesize\textit{USEC}
+        \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.65\linewidth]{Hopcroft.png}
+        \end{figure}
+        \begin{center}
+            \footnotesize\textit{Hopcroft}
+        \end{center}
+    \end{minipage}
+    
+    
+\end{frame}
+
+\begin{comment}
+\begin{frame}{DBSCAN pros and cons}
+    Advantages of the DBSCAN algorithm:
+    \begin{itemize}
+        \item Finds \textbf{various shaped clusters} and isn't limited to convex ones.
+        \item It is an \textbf{exact} algorithm.
+        \item It doesn't assume the number of clusters in advance.
+        \item It is extremely \textbf{fast} as it runs in $O(n\log n)$
+    \end{itemize}
+
+    Disadvantages of the DBSCAN algorithm:
+    \begin{itemize}
+        \item We still need to tune parameters $\epsilon$ and $MinPts$.
+        \item It doesn't actually run in $O(n\log n)$!!
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Too good to be true}
+
+    The original claim was a bit optimistic.
+
+    \vspace{0.5cm}
+    
+    When all points are at distance $\le\epsilon$, regionQuery returns the entire set. Total running time: $\Theta(n^2)$.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.35\linewidth]{close_points.png}
+    \end{figure}
+
+    
+
+    
+\end{frame}
+
+\begin{frame}{Hardness of exact DBSCAN}
+    Junhao Gan and Yufei Tao (2013)\cite{follow_up}:
+    \begin{itemize}
+        \item On the Euclidean Plane the complexity can be improved to $O(n\log\log n)$.
+        \item For $d\geq3$, the problem is as hard as USEC, which has a believed complexity of $\Omega(n^{4/3})$.
+        \item For $d\geq5$, the problem is is as hard as Hopcroft, which has a believed complexity of $\Omega(n^{4/3})$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Hardness of exact DBSCAN}
+
+    All these results cover the Euclidean space, for a general metric space we could assume that the algorithm is $O(n^2)$.
+
+    The problem is much harder than it seemed at first.
+    
+\end{frame}
+
+\end{comment}
+\begin{comment}
+\begin{frame}{Recap}
+
+    open problems: spazi ad alte dimensioni + spazi metrici generali
+\end{frame}
+\end{comment}
+
+\begin{frame}{Gan \& Tao}
+    Previous results discovered by:
+    \vspace{0.3cm}
+    
+    \begin{minipage}[b]{0.45\textwidth}
+    \centering
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.45\linewidth]{yufei-tao.jpg}
+        \end{figure}
+        Yufei Tao
+    \end{minipage}
+    \hfill
+    \begin{minipage}[b]{0.45\textwidth}
+    \centering
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.45\linewidth]{Junhao-gan.jpg}
+        \end{figure}
+        Junhao Gan
+    \end{minipage}
+
+    \vspace{0.3cm}
+    
+    They also found an \textbf{approximate solution} in the $d$-dimensional Euclidean space which runs in $O(n)$ \cite{follow_up}.
+\end{frame}
+
+\begin{comment}
+\begin{frame}{Approximate Solution}
+    In computer science, when a problem is too hard, we start looking for \textbf{approximate solutions}. 
+
+    In our case it is apparently difficult to define an approximate solution, since DBSCAN is not an optimization problem.
+
+    We will not approximate on the value of the solution, instead we will try to find a clustering that is in some sense approximately equal to the clustering we want to find.
+\end{frame}
+\end{comment}
+
+\begin{frame}{Reminder}
+   \centering Fix parameter $\epsilon\in\mathbb{R}_{>0}$. Points $x_1$ and $x_2$ are \textbf{neighbors} if $d(x_1, x_2) \le \epsilon$.
+
+    \vspace{0.5cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{neighboring.png}
+    \end{figure}
+    
+\end{frame}
+
+\begin{frame}{$\rho$-Approximation}
+    Fix parameter $\rho\in\mathbb{R}_{>0}$. \\
+    \textbf{$(\rho,\epsilon)$-Neighboring}: points at distance $\epsilon\le d\le (1+\rho)\epsilon$ might be classified as neighbors.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{rho-approx.png}
+    \end{figure}
+
+    
+\end{frame}
+
+
+\begin{frame}{Approximate our algorithm}
+    Can we use the concept of approximate neighbor to improve the previous DBSCAN algorithm?\\
+
+    \vspace{0.5cm}
+
+    \begin{minipage}{0.32 \textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{Noisy_moons_graph_2.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.32 \textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{allcorepoints.png}
+        \end{figure}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.32 \textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\linewidth]{dbscan_final.png}
+        \end{figure}
+    \end{minipage}
+    
+\end{frame}
+
+
+
+\begin{frame}{Compute The Graph $G$}
+
+    \centering We are limited by the \textbf{size} of graph $G$!
+
+    \vspace{0.3cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Dense_graph.png}
+    \end{figure}
+    \begin{center}
+        \textit{A complete graph emerges with $\epsilon$ large enough}
+    \end{center}
+    
+\end{frame}
+
+\begin{frame}{Grid Subdivision}
+
+    Divide the Euclidean space in \textbf{grid cells} of side length $\frac{\epsilon}{\sqrt{d}}$.
+    
+\vspace{0.3cm}
+
+    \begin{minipage}[c]{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{Grid.png}
+        \end{figure}
+    \end{minipage}
+    \begin{minipage}[c]{0.50\textwidth}
+        \begin{itemize}
+       \item Length of the major diagonal of a cell is $\epsilon$. \\
+    
+        \item Two points in the same cell are surely neighbors.
+        \end{itemize}
+    \end{minipage}
+
+    
+\end{frame}
+
+\begin{frame}{Graph on Cells}
+
+    Instead of creating a graph on the points we can create a graph on the cells.
+
+\vspace{0.3cm}
+
+    \begin{minipage}[c]{0.45\textwidth}
+        \begin{figure}
+        \centering
+        \includegraphics[width=0.9\linewidth]{graph_on_grid_cells.png}
+    \end{figure}
+    \end{minipage}
+    \begin{minipage}[c]{0.50\textwidth}
+        Two cells are neighbors if they contain two neighboring \textbf{core} points.
+    \end{minipage}
+
+    
+
+    
+    
+\end{frame}
+
+\begin{frame}{Graph on Cells}
+
+    Each cell has side length $l =\frac{\epsilon}{\sqrt{d}}$, so it has $O\left(\left(\frac{\epsilon}{l}\right)^d\right)= O\left(d^{d/2}\right)$ neighboring cells.
+
+    \vspace{0.3cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.25\linewidth]{neighboring_cells.png}
+    \end{figure}
+
+    \vspace{0.3cm}
+
+    Total size of graph: $O\left(n\cdot d^{d/2}\right)=O(n)$
+    
+\end{frame}
+
+\begin{frame}{Find Core Points}
+    Function ApproxRangeCount$(x,\epsilon,\rho)$:
+    
+\vspace{0.3cm}
+    \begin{minipage}{0.55\textwidth}
+    \begin{itemize}
+        \item Returns \textbf{approximate number of neighbors} of point $x$.
+        \item Can be implemented in $O\left(\left(\frac{1}{\rho}\right)^d\right)=O(1)$.
+    \end{itemize}
+        
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{Approximaterangecounting.png}
+        \end{figure}
+    \end{minipage}
+    
+    
+\vspace{0.3cm}
+
+\end{frame}
+
+\begin{frame}{Find Core Points}
+    Function ApproxRangeCount$(x,\epsilon,\rho)$:
+    
+\vspace{0.3cm}
+    \begin{minipage}{0.55\textwidth}
+    \begin{itemize}
+        \item Returns \textbf{approximate number of neighbors} of point $x$.
+        \item Can be implemented in $O\left(\left(\frac{1}{\rho}\right)^d\right)=O(1)$.
+    \end{itemize}
+        
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.4\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.8\linewidth]{Approximaterangecounting.png}
+        \end{figure}
+    \end{minipage}
+    
+    
+\vspace{0.3cm}
+
+        \centering $x$ is a \textbf{core point} if ApproxRangeCount$(x,\epsilon,\rho)\ge MinPts$.
+\end{frame}
+
+\begin{frame}{Core Cells}
+    A cell is a \textbf{core cell} if it contains a core point.
+    
+    \vspace{0.3cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.3\linewidth]{Core_cells.png}
+    \end{figure}
+
+    As before, we will find connected components consisting only of core cells.
+\end{frame}
+
+\begin{frame}{Find Neighboring Core Cells}
+    Check if core cells $c_1$ and $c_2$ are neighboring:
+    \begin{itemize}
+        \item \textbf{Slow Method}: check the distances of all pairwise core points.
+    \end{itemize}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{Slow_neighboring_check_core_cells.png}
+    \end{figure}
+    
+    Running time might be $\Omega(n^2)$.
+    
+\end{frame}
+
+\begin{frame}{Find Neighboring Core Cells}
+    Check if core cells $c_1$ and $c_2$ are neighboring:
+    \begin{itemize}
+        \item \textbf{Fast Method}: $\forall x\in c_1$ core point run modified ApproxRangeCount$(x,\epsilon,\rho, c_2)$ that only counts core points in cell $c_2$ in $O(1)$.
+        \item If ApproxRangeCount$(x,\epsilon,\rho, c_2)\ge 1$ then $x$ has a neighbor in $c_2$.
+    \end{itemize}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.3\linewidth]{Fast_neighboring_check_core_cells.png}
+    \end{figure}
+
+    Running time is $O(n)$.
+    
+\end{frame}
+
+\begin{frame}{Approximate DBSCAN}
+    \begin{enumerate}
+        \item Subdivide the space in a grid.
+        \item Find all core points and core cells.
+        \item For each core cell find its neighboring cells.
+        \item Find connected components of core cells.
+        \item Cluster points based on the connected component of their core cell.
+        \item Add border points.
+        \item Return the found clusters.
+    \end{enumerate}
+\end{frame}
+
+
+\begin{frame}{Sandwich Theorem}
+    Guarantee on the \textbf{quality} of an approximate solution:\\
+    $\forall C\in$ ApproxDBSCAN$(\epsilon,\rho)$ $\exists C'\in$ DBSCAN$(\epsilon)$ and $C''\in$ DBSCAN$((1+\rho)\epsilon)$ s.t.: $C'\subseteq C\subseteq C''$
+        \vspace{0.5cm}
+    
+    \begin{minipage}{0.3\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{Sandwich_clusters1.png}
+        \end{figure}
+        \begin{center}
+            \small \textit{Exact solution for $\epsilon$}
+        \end{center}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{Sandwich_clusters2.png}
+        \end{figure}
+        \begin{center}
+            \small \textit{Approximate solution}
+        \end{center}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=1\linewidth]{Sandwich_clusters3.png}
+        \end{figure}
+
+        \begin{center}
+            \small \textit{Exact solution for $(1+\rho)\epsilon$}
+        \end{center}
+    \end{minipage}
+    
+\end{frame}
+
+\begin{frame}{Experiments}
+    The approximate algorithm is way \textbf{faster} than the original one.
+
+    \vspace{0.5cm}
+
+    \begin{figure}
+    \centering
+    \includegraphics[width=0.57\linewidth]{approx_dbscan_running_time.png}
+\end{figure}
+\begin{center}
+\textit{Running time of approximate DBSCAN from Gan \& Tao}
+\end{center}
+\end{frame}
+
+\begin{frame}{Experiments}
+
+    On real-life datasets a value of $\rho=10^{-2}$ almost always results in an approximated solution equal to the exact one.
+
+    \vspace{0.5cm}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=1\linewidth]{error_dbscan.png}
+    \end{figure}
+    
+\end{frame}
+
+\begin{frame}{Further Research}
+
+    In 2024 Mo and Shong investigated DBSCAN on dataset with low \textbf{doubling dimension} \cite{doubling_dimension}.
+
+    \vspace{0.5cm}
+
+    \centering \fbox{\includegraphics[width=0.85\linewidth]{low_doubling_dimension.png}}
+\end{frame}
+
+\begin{frame}{Test of Time Award}
+    In 2014 the original DBSCAN paper wins the \textbf{SIGKDD Test of Time Award}.
+
+\vspace{0.5cm}
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{test_of_time_award.jpg}
+    \end{figure}
+    
+\end{frame}
+
+\begin{frame}{Applications}
+    DBSCAN has many \textbf{real world applications}:
+
+    \vspace{0.3cm}
+
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \textbf{Bioinformatics}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{shutterstock_430479463-e1563327818340-376507331.jpg}
+        \end{figure}
+        \begin{itemize}
+        \item Protein family identification
+        \item Metagenomic sequence analysis
+    \end{itemize}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \textbf{Cybersecurity}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{gettyimages-1370834192-2668288701.jpg}
+        \end{figure}
+        \begin{itemize}
+        \item Network intrusion detection
+        \item Fraud pattern discovery
+    \end{itemize}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \textbf{Computer Vision}
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{computer-vision-3713535937.jpg}
+        \end{figure}
+        \begin{itemize}
+        \item Image segmentation
+        \item LiDAR point cloud processing
+        \item Anomaly detection
+    \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}{LiDAR Point Cloud Processing}
+
+
+\begin{minipage}[c]{0.8\textwidth}
+    \textbf{Alessandro Dario} and his team \textbf{RaceUp} use DBSCAN for detecting cones in the path of their \textbf{Formula Student} car!
+\end{minipage}
+\begin{minipage}[c]{0.17\textwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1\linewidth]{Alessandro_Dario.jpg}
+    \end{figure}
+\end{minipage}
+
+\vspace{0.3cm}
+
+\begin{minipage}[c]{0.4\textwidth}
+    \begin{figure}
+        \centering
+        \includegraphics[width=1\linewidth]{formula_student_car.png}
+    \end{figure}
+\end{minipage}
+\hfill 
+\begin{minipage}[c]{0.55\textwidth}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{formula_student.png}
+\end{figure}
+\end{minipage}
+\end{frame}
+
+
+\begin{comment}
+\begin{frame}{The Future of DBSCAN}
+    DBSCAN still remains an \textbf{active research field} to this day and only awaits for passionate researchers to develop further.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.65\linewidth]{38-381783_want-you-for-us-army-transparent-hd-png-4253689009.png}
+    \end{figure}
+\end{frame}
+\end{comment}
+
+\begin{comment}
+\begin{frame}{DBSCAN Recap}
+
+\begin{itemize}
+    \item In 2014 DBSCAN wins the \textbf{SIGKDD Test of Time Award}.
+    \item Still used in many real world application in its original form.
+    \item Has great runing time improvement with approximation techniques.
+    \item Still an active research field, especially in non-Euclidean Spaces.
+
+
+    
+\end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Real World Applications}
+    \todo{OLD}
+    
+    The original paper won the 2014 SIGKDD Test of Time Award and it's still a widely used algorithm in many applications in:
+    \begin{columns}
+    \column{0.5\textwidth}
+
+    \textbf{Computer Vision}
+    \begin{itemize}
+        \item Image segmentation
+        \item LiDAR point cloud processing
+        \item Anomaly detection in MRI scans
+    \end{itemize}
+
+    \column{0.5\textwidth}
+    \textbf{Cybersecurity}
+    \begin{itemize}
+        \item Network intrusion detection
+        \item Fraud pattern discovery
+    \end{itemize}
+    
+    \textbf{Bioinformatics}
+    \begin{itemize}
+        \item Protein family identification
+        \item Metagenomic sequence analysis
+    \end{itemize}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Formula Student}
+    \cite{follow_follow_up}
+\end{frame}
+
+\end{comment}
+
+\begin{frame}{Bibliography}
+    \bibliographystyle{abbrv}
+    \bibliography{biblio}
+\end{frame}
+
+\begin{emptyframe}
+    Thank you!\\
+    Any questions?
+\end{emptyframe}
+
+
+\begin{frame}{Quad Trees}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.9\linewidth]{quad_tree.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Doubling Dimension}
+    Let $\Lambda$ be the smallest positive integer s.t. $\forall x\in S$ and $\forall \epsilon>0$, $S\cap\B{2\epsilon}{x}$ can always be covered by the union of at most $\Lambda$ balls with radius $\epsilon$.
+    Then the \textbf{Doubling Dimension} of $S$ is:
+    \[D = \lceil\log_2\Lambda\rceil\]
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.35\linewidth]{doubling_dimension.png}
+    \end{figure}
+\end{frame}
+
+\end{document}
+

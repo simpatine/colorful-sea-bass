@@ -15,7 +15,7 @@ groups = [
 
 
 for group, suptitle, outfile in groups:
-    fig,ax = plt.subplots(1,len(group),figsize=(6*len(group)**0.7,4), sharey=True, sharex=True, dpi=100)
+    fig,ax = plt.subplots(1,len(group),figsize=(6*len(group)**0.7,4), sharey=True, sharex=True, dpi=500)
     if len(group) == 1: ax = [ax]
     # fig.suptitle("Accuracy and F1 scores with random subsampling " + suptitle)
     for i,(datapath,title,vals) in enumerate(group):

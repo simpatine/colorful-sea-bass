@@ -9,7 +9,8 @@
 \usepackage{comment}
 \usepackage{xcolor}
 \usepackage{graphicx,subcaption}
-\usepackage[linesnumbered,ruled,vlined,noend,algo2e]{algorithm2e}
+\usepackage{tikz,float}
+\usetikzlibrary{positioning, fit}
 \usepackage{tcolorbox}
 
 \renewcommand{\epsilon}{\varepsilon}
@@ -31,19 +32,6 @@
 \subtitle{}
 
 \date{\today}
-
-% The next block of commands puts the table of contents at the beginning of each section and highlights the current section
-
-\begin{comment}
-\AtBeginSection[]
-{
-  \begin{frame}
-    \frametitle{Table of Contents}
-    \tableofcontents[currentsection]
-  \end{frame}
-}
-\end{comment}
-
 
 \begin{document}
 
@@ -89,7 +77,51 @@
 
 \begin{frame}
 \frametitle{Pipeline Overview}
-%\includegraphics[width=\linewidth]{pipeline_diagram.png} % placeholder for Figure 1
+\begin{figure}[htb!]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.5cm and 0.1cm,
+        every node/.style={font=\small},
+        box/.style={draw, rectangle, rounded corners, minimum height=1cm, minimum width=2.6cm, align=center},
+        group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
+    ]
+
+    \node[box] (features) {Features \\ (SNP Matrix)};
+    \node[box, below=of features] (annotation) {Functional \\ Annotations};
+    \node[box, below=of annotation] (mortality) {Mortality \\ Labels};
+
+    \node[group, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
+
+    \node[box, right=1cm of features] (uniform) {Uniform};
+    \node[box, below=1cm of uniform] (chr) {Per-Chromosome};
+    \node[box, below=1cm of chr] (annot) {Annotation-Based};
+
+    \node[group, fit=(uniform)(chr)(annot), label=above:{\textbf{Subsampling}}] (subsampling_group) {};
+
+    \node[box, right=1cm of uniform] (split) {Train/Test Split};
+    \node[box, right=1cm of split] (xgboost) {XGBoost Training};
+    \node[box, below=of xgboost] (evaluate) {Evaluation};
+
+    \draw[->] (features.east) -- ++(0.1,0) |- (uniform.west);
+    \draw[->] (features.east) -- (chr.west);
+    \draw[->] (features.east) -- (annot.west);
+
+    \draw[->] (annotation.east) -- ++(0.2,0) |- (annot.west);
+
+    \draw[->] (uniform.east) -- ++(0.1,0) |- (split.west);
+    \draw[->] (chr.east) -- (split.west);
+    \draw[->] (annot.east) -- (split.west);
+
+    \draw[->, thick] (mortality.east) -| (split.south);
+
+    \draw[->] (split.east) -- (xgboost.west);
+    \draw[->] (split.east) -- (evaluate.west);
+    \draw[->] (xgboost.south) -- (evaluate.north);
+
+    \end{tikzpicture}
+    \caption{Pipeline of the model training after subsampling of the data}
+    \label{fig:pipeline}
+\end{figure}
 \end{frame}
 
 \begin{frame}
@@ -157,6 +189,7 @@
 \end{itemize}
 \end{frame}
 
+\section{Results}
 \begin{frame}
 \frametitle{Subsampling Ratios}
 \begin{itemize}
@@ -165,31 +198,25 @@
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-\frametitle{Results: Genome-wide Subsampling}
-\begin{itemize}
-  \item Accuracy and F1 show mostly flat trend across $p$ values.
-  \item Slight performance drop at very low rates ($p < 0.01$).
-\end{itemize}
+\begin{frame}{Results: uniform subsampling}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.5\textwidth]{../figures/subsample_plot.png}
+    \caption{Plot of accuracy and F1 scores when subsampling uniformly on the whole genome.}
+    \label{fig:res1a}
+\end{figure}
 \end{frame}
 
-\begin{frame}
-\frametitle{Results: Annotated Regions}
-\begin{itemize}
-  \item Scores consistent across function (e.g., Promoter vs Enhancer).
-  \item Subsampling by tissue shows minor fluctuations.
-\end{itemize}
+\begin{frame}{Results: uniform subsampling on each chromosome}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=0.5\textwidth]{../figures/uniform_sample_low_ratio.png}
+    \caption{Plot of accuracy and F1 scores when subsampling uniformly on each chromosome.}
+    \label{fig:res1b}
+\end{figure}
 \end{frame}
 
-\begin{frame}
-\frametitle{Interpretation of Results}
-\begin{itemize}
-  \item Model performance largely independent of subsampling rate.
-  \item Low $p$ reduces predictive quality — not surprising.
-  \item Subsampling improves speed without sacrificing accuracy.
-\end{itemize}
-\end{frame}
-
+\section{Conclusions}
 \begin{frame}
 \frametitle{Conclusions}
 \begin{itemize}

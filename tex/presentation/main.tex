@@ -1,15 +1,14 @@
-
-
 \documentclass[aspectratio=169]{beamer}
 
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
-%\usepackage[T1]{fontenc}
-%\usepackage[utf8]{inputenc}
-%\usepackage[english]{babel}
-%\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{lmodern}
 \usepackage{comment}
 \usepackage{xcolor}
-\usepackage{graphicx}
+\usepackage{graphicx,subcaption}
 \usepackage[linesnumbered,ruled,vlined,noend,algo2e]{algorithm2e}
 \usepackage{tcolorbox}
 
@@ -82,6 +81,50 @@ colback=red!10
 \end{frame}
 
 \begin{frame}{Results}
+\end{frame}
+
+\begin{frame}{Results: uniform subsampling}
+\begin{figure}[ht!]
+    \centering
+    \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+\includegraphics[width=\columnwidth]{../figures/subsample_plot.png}
+\caption{Plot of the scores when subsampling uniformly on the whole genome.}
+\label{fig:res1a}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+\includegraphics[width=\columnwidth]{../figures/uniform_sample_low_ratio.png}
+\caption{Plot of the scores when subsampling uniformly on each chromosome.}
+\label{fig:res1b}
+    \end{subfigure}
+\caption{Plots of accuracy and F1 scores for different subsampling rates on the whole genome.}
+\label{fig:res1}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results: annotated subsampling}
+\begin{figure}[ht!]
+\centering
+\begin{subfigure}[ht]{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../figures/subsample_annotated.png}
+\caption{Plots of the scores while subsampling genes annotated in different categories.}
+\label{fig:res2a}
+\end{subfigure}
+
+\begin{subfigure}[ht]{\textwidth}
+\centering
+\includegraphics[width=\textwidth]{../figures/subsample_ntissue.png}
+\caption{Plots of the scores while using only genes with tissue number in a given range.}
+\label{fig:res2b}
+\end{subfigure}
+\caption{Plots of the accuracy and F1 scores for the different subsampling rates on the annotated genes. Each single plot is done using only the genes annotated with the indicated values.}
+\label{fig:res2}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Conclusions}
 \end{frame}
 
 \end{document}

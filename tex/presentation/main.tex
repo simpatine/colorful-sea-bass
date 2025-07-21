@@ -49,65 +49,164 @@
 
 \frame{\titlepage}
 
-\begin{frame}{Agenda}
-    \tableofcontents
+\begin{frame}
+\frametitle{Overview}
+\begin{itemize}
+  \item Motivation: Identifying impactful SNPs in sea bass mortality
+  \item Dataset: Genomic SNP data, mortality outcomes, and annotations
+  \item Method: Subsampling techniques with XGBoost
+  \item Results: Accuracy/F1 vs. subsampling rate
+  \item Conclusion: Subsampling preserves predictive power
+\end{itemize}
 \end{frame}
 
-\section{Introduction}
-\begin{frame}{Introduction}
+\begin{frame}
+\frametitle{SNPs and Sea Bass Mortality}
+\begin{itemize}
+  \item VNN is a widespread lethal disease in sea life.
+  \item SNPs may increase or decrease the chance of death.
+  \item Goal: Predict mortality based on SNP profiles.
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Methodology: subsampling}
+\begin{frame}
+\frametitle{Challenges with Genomic Data}
+\begin{itemize}
+  \item Each fish: over 6 million SNP positions.
+  \item Sample size: only 990 sea bass individuals.
+  \item Traditional models overfit due to data dimensionality.
+\end{itemize}
 \end{frame}
 
-\section{Results}
-\begin{frame}{Results}
+\begin{frame}
+\frametitle{Machine Learning Approach}
+\begin{itemize}
+  \item Use XGBoost classifier for mortality prediction.
+  \item Need to reduce feature space: apply subsampling.
+  \item Evaluate performance on subsampled datasets.
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Results: uniform subsampling}
-\begin{figure}[ht!]
-    \centering
-    \begin{subfigure}[t]{0.49\textwidth}
-    \centering
-\includegraphics[width=\columnwidth]{../figures/subsample_plot.png}
-\caption{Plot of the scores when subsampling uniformly on the whole genome.}
-\label{fig:res1a}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.49\textwidth}
-    \centering
-\includegraphics[width=\columnwidth]{../figures/uniform_sample_low_ratio.png}
-\caption{Plot of the scores when subsampling uniformly on each chromosome.}
-\label{fig:res1b}
-    \end{subfigure}
-\caption{Plots of accuracy and F1 scores for different subsampling rates on the whole genome.}
-\label{fig:res1}
-\end{figure}
+\begin{frame}
+\frametitle{Pipeline Overview}
+%\includegraphics[width=\linewidth]{pipeline_diagram.png} % placeholder for Figure 1
 \end{frame}
 
-\begin{frame}{Results: annotated subsampling}
-\begin{figure}[ht!]
+\begin{frame}
+\frametitle{SNP Dataset Structure}
+\begin{itemize}
+  \item 990 rows (fish), each with 6,072,853 SNP features.
+  \item SNP values: 0 (no mutation), 1 (heterozygous), 2 (homozygous alt).
+  \item Each fish is paired with a mortality label.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Annotation Metadata}
+\begin{itemize}
+  \item Annotations include function: Promoter, Enhancer, Open Chromatin.
+  \item Tissue number (0–25) indicates location-specific relevance.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Uniform Subsampling}
+\begin{itemize}
+  \item Randomly sample a fixed proportion $p$ of all SNPs.
+  \item Simple but may cause imbalance across chromosomes.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Per-Chromosome Subsampling}
+\begin{itemize}
+  \item Ensures balanced representation from each chromosome.
+  \item Randomly sample same number of SNPs per chromosome.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Annotation-Based Subsampling}
+\begin{itemize}
+  \item Filter SNPs by biological annotation.
+  \item Then apply uniform subsampling to relevant regions.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Subsampling Strategy Comparison}
+\begin{itemize}
+  \item Trade-offs in simplicity, biological interpretability, and balance.
+  \item Aim: maximize predictive power while reducing dimensionality.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{XGBoost Training}
+\begin{itemize}
+  \item Training/testing split is fixed before subsampling.
+  \item Trained multiple times per method/rate to average performance.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Control of Randomness}
+\begin{itemize}
+  \item XGBoost random seed fixed.
+  \item Subsampling is the only random step.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Subsampling Ratios}
+\begin{itemize}
+  \item Subsampled with multiple $p$ values (e.g. 0.01, 0.05, 0.1, 0.2).
+  \item Trained model for each combination.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Results: Genome-wide Subsampling}
+\begin{itemize}
+  \item Accuracy and F1 show mostly flat trend across $p$ values.
+  \item Slight performance drop at very low rates ($p < 0.01$).
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Results: Annotated Regions}
+\begin{itemize}
+  \item Scores consistent across function (e.g., Promoter vs Enhancer).
+  \item Subsampling by tissue shows minor fluctuations.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Interpretation of Results}
+\begin{itemize}
+  \item Model performance largely independent of subsampling rate.
+  \item Low $p$ reduces predictive quality — not surprising.
+  \item Subsampling improves speed without sacrificing accuracy.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusions}
+\begin{itemize}
+  \item Random SNP subsampling retains model effectiveness.
+  \item No strong trend between rate and accuracy (outside extremes).
+  \item Enables faster, scalable experimentation for genomic prediction.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Thank You / Questions?}
 \centering
-\begin{subfigure}[ht]{\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../figures/subsample_annotated.png}
-\caption{Plots of the scores while subsampling genes annotated in different categories.}
-\label{fig:res2a}
-\end{subfigure}
-
-\begin{subfigure}[ht]{\textwidth}
-\centering
-\includegraphics[width=\textwidth]{../figures/subsample_ntissue.png}
-\caption{Plots of the scores while using only genes with tissue number in a given range.}
-\label{fig:res2b}
-\end{subfigure}
-\caption{Plots of the accuracy and F1 scores for the different subsampling rates on the annotated genes. Each single plot is done using only the genes annotated with the indicated values.}
-\label{fig:res2}
-\end{figure}
+\Huge Questions?
 \end{frame}
 
-\section{Conclusions}
-\begin{frame}{Conclusions}
-\end{frame}
+\end{document}
+
 
 \end{document}
 

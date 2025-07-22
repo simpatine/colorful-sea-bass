@@ -70,40 +70,55 @@
 \begin{frame}
 \frametitle{SNPs for predicting mortality}  
 
+
+  \centering The \textbf{genome} might be useful to predict mortality.
+
+  \vspace{0.3cm}
+
 \begin{minipage}[c]{0.45\textwidth}
   \includegraphics[width=0.7\linewidth]{figures/SNP.png}
 \end{minipage}
-\begin{minipage}[c]{0.45\textwidth}
+\begin{minipage}[c]{0.5\textwidth}
 
-  The \textbf{genome} might be useful to predict mortality.
 
   \textbf{SNPs}: Single nucleotide polymorphisms.
 
 \end{minipage}
 \end{frame}
 
+
+\begin{frame}
+\frametitle{Machine Learning Approach}
+
+  Predict if a sea bass will die by watching its genome: \textbf{Machine Learning}.
+
+\vspace{0.3cm}
+
+\begin{minipage}[c]{0.5\textwidth}
+  In particular, we use the \textbf{XGBoost} classifier.
+\end{minipage}
+\begin{minipage}[c]{0.45\textwidth}
+  \includegraphics[width=0.9\linewidth]{figures/xggoost.png}
+\end{minipage}
+\end{frame}
+
+
 \begin{frame}
 \frametitle{Challenges with Genomic Data}
 \begin{minipage}[c]{0.5\textwidth}
 \begin{itemize}
-  \item Each fish: over 6 million SNP positions.
-  \item Sample size: only 990 sea bass individuals.
-  \item Traditional models overfit due to data dimensionality.
+  \item Each fish: over \textbf{6 million} SNP positions.
+  \item Sample size: only \textbf{990} sea bass individuals.
+  \item Traditional models may \textbf{overfit} due to high dimensionality.
+  \item We mitigate through \textbf{subsampling}.
 \end{itemize}
 \end{minipage}
-\begin{minipage}[c]{0.5\textwidth}
-  
+\begin{minipage}[c]{0.49\textwidth}
+  \includegraphics[width=\linewidth]{figures/dna.jpg}
 \end{minipage}
+
 \end{frame}
 
-\begin{frame}
-\frametitle{Machine Learning Approach}
-\begin{itemize}
-  \item Use XGBoost classifier for mortality prediction.
-  \item Need to reduce feature space: apply subsampling.
-  \item Evaluate performance on subsampled datasets.
-\end{itemize}
-\end{frame}
 
 \begin{frame}
 \frametitle{Pipeline Overview}
@@ -312,6 +327,16 @@ In order to limit the variance of results we impose:
   \item Multiple runs for each pair of parameters.
   \item Comparison with \textbf{baseline results} from a "dumb" classifier, always guessing the most common class.
 \end{itemize}
+\end{frame}
+
+\section{Results}
+\begin{frame}{Results: testing setup}
+
+\textbf{Baseline scores:}
+In every plot we compared our scores with some "baseline scores". These baseline scores are the score of a "trivial" classifier, that always reports the most common class.
+% Our data samples were in 54.32\% of cases of one class, thus the baseline accuracy is this value.
+
+For different subsampling ratios and techniques we ran multiple instances.
 \end{frame}
 
 \begin{frame}{Results: uniform subsampling}

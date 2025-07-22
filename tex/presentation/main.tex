@@ -88,21 +88,21 @@
 \begin{figure}[htb!]
     \centering
     \begin{tikzpicture}[
-        node distance=0.5cm and 0.1cm,
+        node distance=1cm and 0.1cm,
         every node/.style={font=\small},
         box/.style={draw, rectangle, rounded corners, minimum height=1cm, minimum width=2.6cm, align=center},
         group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
     ]
 
     \node[box] (features) {Features \\ (SNP Matrix)};
-    \node[box, below=of features] (annotation) {Functional \\ Annotations};
-    \node[box, below=of annotation] (mortality) {Mortality \\ Labels};
+    \node[box, below=0.7cm of features] (annotation) {Functional \\ Annotations};
+    \node[box, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
 
     \node[group, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
 
     \node[box, right=1cm of features] (uniform) {Uniform};
-    \node[box, below=1cm of uniform] (chr) {Per-Chromosome};
-    \node[box, below=1cm of chr] (annot) {Annotation-Based};
+    \node[box, below=0.2cm of uniform] (chr) {Per-Chromosome};
+    \node[box, below=0.2cm of chr] (annot) {Annotation-Based};
 
     \node[group, fit=(uniform)(chr)(annot), label=above:{\textbf{Subsampling}}] (subsampling_group) {};
 
@@ -120,7 +120,7 @@
     \draw[->] (chr.east) -- (split.west);
     \draw[->] (annot.east) -- (split.west);
 
-    \draw[->, thick] (mortality.east) -| (split.south);
+    \draw[->] (mortality.east) -| (split.south);
 
     \draw[->] (split.east) -- (xgboost.west);
     \draw[->] (split.east) -- (evaluate.west);
@@ -183,20 +183,64 @@
 
 \begin{frame}
 \frametitle{Control of Randomness}
+In order to limit the variance of results we impose:
 \begin{itemize}
-  \item XGBoost random seed fixed.
-  \item Train-test split fixed
-  \item Subsampling is the only random step.
+  \item XGBoost random seed, train-test split fixed
+  \item Subsampling is the only random component varying between experiments.
 \end{itemize}
+\centering
+ \resizebox{0.8\textwidth}{!}{
+    \begin{tikzpicture}[
+        node distance=1cm and 0.1cm,
+        every node/.style={font=\small},
+        box/.style={draw, rectangle, rounded corners, minimum height=1cm, minimum width=2.6cm, align=center},
+        group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
+    ]
+
+    \node[box, color=gray] (features) {Features \\ (SNP Matrix)};
+    \node[box, color=gray, below=0.7cm of features] (annotation) {Functional \\ Annotations};
+    \node[box, color=gray, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
+
+    \node[group, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
+
+    \node[box, right=1cm of features] (uniform) {Uniform};
+    \node[box, below=0.2cm of uniform] (chr) {Per-Chromosome};
+    \node[box, below=0.2cm of chr] (annot) {Annotation-Based};
+
+    \node[group, thick, color=red, fit=(uniform)(chr)(annot), label=above:{\textbf{Subsampling}}] (subsampling_group) {};
+
+    \node[box, color=gray, right=1cm of uniform] (split) {Train/Test Split};
+    \node[box, color=gray, right=1cm of split] (xgboost) {XGBoost Training};
+    \node[box, color=gray, below=of xgboost] (evaluate) {Evaluation};
+
+    \draw[->] (features.east) -- ++(0.1,0) |- (uniform.west);
+    \draw[->] (features.east) -- (chr.west);
+    \draw[->] (features.east) -- (annot.west);
+
+    \draw[->] (annotation.east) -- ++(0.2,0) |- (annot.west);
+
+    \draw[->] (uniform.east) -- ++(0.1,0) |- (split.west);
+    \draw[->] (chr.east) -- (split.west);
+    \draw[->] (annot.east) -- (split.west);
+
+    \draw[->] (mortality.east) -| (split.south);
+
+    \draw[->] (split.east) -- (xgboost.west);
+    \draw[->] (split.east) -- (evaluate.west);
+    \draw[->] (xgboost.south) -- (evaluate.north);
+
+    \end{tikzpicture}
+}
 \end{frame}
 
 \section{Results}
 \begin{frame}
-\frametitle{Subsampling Ratios}
+\frametitle{Subsampling Ratios and baseline results}
 \begin{itemize}
     \item Subsampled with multiple $p$ values: log-spaced varying from the whole genome to few SNPs.
   \item Trained model for each combination of model and subsample rate.
   \item Multiple runs for each pair of parameters.
+  \item Comparison with \textbf{baseline results} from a "dumb" classifier, always guessing the most common class.
 \end{itemize}
 \end{frame}
 
@@ -209,9 +253,6 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}{Results: observations}
-\end{frame}
-
 \begin{frame}{Results: uniform subsampling on each chromosome}
 \begin{figure}[H]
     \centering
@@ -219,9 +260,6 @@
     \caption{Plot of accuracy and F1 scores when subsampling uniformly on each chromosome.}
     \label{fig:res1b}
 \end{figure}
-\end{frame}
-
-\begin{frame}{Results: observations}
 \end{frame}
 
 \begin{frame}{Results: annotated subsampling (function)}
@@ -242,9 +280,6 @@
 \end{figure}
 \end{frame}
 
-\begin{frame}{Results: observations}
-\end{frame}
-
 \section{Conclusions}
 \begin{frame}
 \frametitle{Conclusions}
@@ -252,7 +287,6 @@
 \begin{itemize}
   \item Random SNP subsampling retains model effectiveness.
   \item No strong trend between rate and accuracy (outside extremes): this may be good.
-  % \item Enables faster, scalable experimentation for genomic prediction.
   \item There doesn't seem to be specific regions of the genome containing the information determining the disease effects.
 \end{itemize}
 \end{minipage}

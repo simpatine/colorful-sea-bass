@@ -11,6 +11,7 @@
 \usepackage{graphicx,subcaption}
 \usepackage{tikz,float}
 \usepackage{pgfplots}
+\usepackage{expl3}
 
 \usetikzlibrary{positioning, fit}
 \usepackage{tcolorbox}
@@ -56,13 +57,16 @@
 \begin{minipage}{0.49\textwidth}
   \textbf{Viral nervous necrosis} (\textbf{VNN}) is a highly spread disease among sealife.
 
-  \vspace{2cm}
-
-  We concentrate our efforts on predicting the mortality of a population of \textbf{sea basses} affected by VNN.
 \end{minipage}
 \begin{minipage}{0.49\textwidth}
-    \centering\includegraphics[width=0.64\linewidth]{figures/VNN.jpg}
-    \centering\includegraphics[width=0.64\linewidth]{figures/Black-Sea-Bass-303435837.jpg}
+    \centering\includegraphics[width=0.7\linewidth]{figures/VNN.jpg}
+\end{minipage}
+
+\begin{minipage}{0.49\textwidth}
+    \centering\includegraphics[width=0.7\linewidth]{figures/Black-Sea-Bass-303435837.jpg}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+  We concentrate our efforts on predicting the mortality of a population of \textbf{sea basses} affected by VNN.
 \end{minipage}
 
 \end{frame}
@@ -70,16 +74,14 @@
 \begin{frame}
 \frametitle{SNPs for predicting mortality}  
 
-
-  \centering The \textbf{genome} might be useful to predict mortality.
-
-  \vspace{0.3cm}
-
 \begin{minipage}[c]{0.45\textwidth}
-  \includegraphics[width=0.7\linewidth]{figures/SNP.png}
+  \includegraphics[width=0.8\linewidth]{figures/SNP.png}
 \end{minipage}
 \begin{minipage}[c]{0.5\textwidth}
 
+  The \textbf{genome} might be useful to predict mortality.
+
+  \vspace{1cm}
 
   \textbf{SNPs}: Single nucleotide polymorphisms.
 
@@ -200,7 +202,7 @@
     % Loop through each bar
     \foreach \i in {1,...,\bars} {
       \pgfmathsetmacro{\barheight}{2+rnd*\maxheight} % Random height for the bar
-      \pgfmathsetmacro{\numsegments}{7}
+      \pgfmathsetmacro{\numsegments}{int(rnd*10)}
       
       % Position for the current bar
       \def\xpos{\i*1} % Space out the bars
@@ -213,7 +215,7 @@
         \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
       }
       
-      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight);
+      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.05);
     }
   \end{tikzpicture}
 \end{frame}
@@ -232,20 +234,40 @@
     % Loop through each bar
     \foreach \i in {1,...,\bars} {
       \pgfmathsetmacro{\barheight}{2+rnd*\maxheight} % Random height for the bar
-      \pgfmathsetmacro{\numsegments}{7}
+      \pgfmathsetmacro{\numsegments}{4}
       
       % Position for the current bar
       \def\xpos{\i*1} % Space out the bars
       
       % Loop through each segment of the current bar
-      \foreach \j in {1,...,\numsegments} {
-        \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.25)} % Random height for the segment
+      \pgfmathsetmacro{\minsegmentheight}{0.05}
+      \pgfmathsetmacro{\j}{1}
+        \pgfmathsetmacro{\segmentheight}{\minsegmentheight+rnd*(\barheight-\minsegmentheight-0.7*(\numsegments-\j))} % Random height for the segment
         
         % Draw the segment with random color
         \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
-      }
+        \pgfmathsetmacro{\minsegmentheight}{\segmentheight + 0.4}
+      \pgfmathsetmacro{\j}{2}
+        \pgfmathsetmacro{\segmentheight}{\minsegmentheight+rnd*(\barheight-\minsegmentheight-0.7*(\numsegments-\j))} % Random height for the segment
+        
+        % Draw the segment with random color
+        \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+        \pgfmathsetmacro{\minsegmentheight}{\segmentheight + 0.4}
+      \pgfmathsetmacro{\j}{3}
+        \pgfmathsetmacro{\segmentheight}{\minsegmentheight+rnd*(\barheight-\minsegmentheight-0.7*(\numsegments-\j))} % Random height for the segment
+        
+        % Draw the segment with random color
+        \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+        \pgfmathsetmacro{\minsegmentheight}{\segmentheight + 0.4}
+      \pgfmathsetmacro{\j}{4}
+        \pgfmathsetmacro{\segmentheight}{\minsegmentheight+rnd*(\barheight-\minsegmentheight-0.7*(\numsegments-\j))} % Random height for the segment
+        
+        % Draw the segment with random color
+        \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+        \pgfmathsetmacro{\minsegmentheight}{\segmentheight + 0.4}
       
-      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight);
+      
+      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.2);
     }
   \end{tikzpicture}
 \end{frame}
@@ -390,9 +412,9 @@ For different subsampling ratios and techniques we ran multiple instances.
 \end{minipage}
 \end{frame}
 
-\begin{frame}{End}
+\begin{emptyframe}
 \centering
-\Huge Thank You
-\end{frame}
+\Huge Thank You!
+\end{emptyframe}
 
 \end{document}

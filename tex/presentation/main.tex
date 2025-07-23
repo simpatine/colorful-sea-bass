@@ -448,10 +448,16 @@ $\vdots$ & $\vdots$ \\
       % Loop through each segment of the current bar
       \foreach \j in {1,...,\numsegments} {
         \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
-        
         % Draw the segment with random color
         \fill[red, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
       }
+
+    \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
+    \fill[violet, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+    \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
+    \fill[green, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+    \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
+    \fill[green, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
       
       \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.05);
     }
@@ -504,9 +510,9 @@ $\vdots$ & $\vdots$ \\
     \end{tikzpicture}
 \end{figure}
 \end{frame}
+
 %\section{Cambio della guardia}
 %TODO add cambio della guardia / sostanza
-
 \begin{frame}
 \frametitle{Control of Randomness}
 In order to limit the variance of results we impose:

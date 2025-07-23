@@ -202,7 +202,7 @@
     \node[box, color=gray, below=0.2cm of uniform] (chr) {Per-Chromosome};
     \node[box, color=gray, below=0.2cm of chr] (annot) {Annotation-Based};
 
-    \node[group, color=gray, fit=(uniform)(chr)(annot), label=above:{\textbf{Subsampling}}] (subsampling_group) {};
+    \node[group, color=gray, fit=(uniform)(chr)(annot), label=above:{\textbf{\textcolor{gray}{Subsampling}}}] (subsampling_group) {};
 
     \node[box, color=gray, right=1cm of uniform] (split) {Train/Test Split};
     \node[box, color=gray, right=1cm of split] (xgboost) {XGBoost Training};
@@ -305,7 +305,7 @@ $\vdots$ & $\vdots$ \\
     \node[box, color=gray, below=0.7cm of features] (annotation) {Functional \\ Annotations};
     \node[box, color=gray, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
 
-    \node[group, color=gray, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
+    \node[group, color=gray, fit=(features)(mortality)(annotation), label=above:{\textbf{\textcolor{gray}{Input Datasets}}}] (dataset_group) {};
 
     \node[box, right=1cm of features] (uniform) {Uniform};
     \node[box, below=0.2cm of uniform] (chr) {Per-Chromosome};
@@ -483,7 +483,7 @@ $\vdots$ & $\vdots$ \\
     \node[box, color=gray, below=0.7cm of features] (annotation) {Functional \\ Annotations};
     \node[box, color=gray, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
 
-    \node[group, color=gray, fit=(features)(mortality)(annotation), label=above:{\textbf{Input Datasets}}] (dataset_group) {};
+    \node[group, color=gray, fit=(features)(mortality)(annotation), label=above:{\textbf{\textcolor{gray}{Input Datasets}}}] (dataset_group) {};
 
     \node[box, color=gray, right=1cm of features] (uniform) {Uniform};
     \node[box, color=gray, below=0.2cm of uniform] (chr) {Per-Chromosome};
@@ -517,6 +517,12 @@ $\vdots$ & $\vdots$ \\
 
 %\section{Cambio della guardia}
 %TODO add cambio della guardia / sostanza
+\begin{frame}{Let's get to the substance}
+
+
+  \centering\includegraphics[width = 0.8\linewidth]{figures/cooked-sea-bass.jpg}
+\end{frame}
+
 \begin{frame}
 \frametitle{Control of Randomness}
 In order to limit the variance of results we impose:

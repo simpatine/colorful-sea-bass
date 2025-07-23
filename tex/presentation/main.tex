@@ -215,6 +215,9 @@ $\vdots$ & $\vdots$ \\
   \item Annotations include function: Promoter, Enhancer, Open Chromatin.
   \item Tissue number (0–25) indicates location-specific relevance.
 \end{itemize}
+
+\vspace{0.3cm}
+
 \centering
 \resizebox{0.6\textwidth}{!}{
 \begin{tabular}{c|c|c}
@@ -236,6 +239,9 @@ $\vdots$ & $\vdots$ \\
   \item Randomly sample a fixed proportion $p$ of all SNPs.
   \item Simple but may cause imbalance across chromosomes.
 \end{itemize}
+
+\vspace{0.3cm}
+
 \centering
 \begin{tikzpicture}
     \def\bars{7} % Number of bars
@@ -268,6 +274,9 @@ $\vdots$ & $\vdots$ \\
   \item Ensures balanced representation from each chromosome.
   \item Randomly sample same number of SNPs per chromosome.
 \end{itemize}
+
+\vspace{0.3cm}
+
 \centering
 \begin{tikzpicture}
     \def\bars{7} % Number of bars
@@ -320,6 +329,33 @@ $\vdots$ & $\vdots$ \\
   \item Filter SNPs by biological annotation.
   \item Then apply uniform subsampling to relevant regions.
 \end{itemize}
+
+\vspace{0.3cm}
+
+\centering
+\begin{tikzpicture}
+    \def\bars{7} % Number of bars
+    \def\maxheight{2.5} % Max height of bars
+    
+    % Loop through each bar
+    \foreach \i in {1,...,\bars} {
+      \pgfmathsetmacro{\barheight}{2+rnd*\maxheight} % Random height for the bar
+      \pgfmathsetmacro{\numsegments}{int(rnd*3)}
+      
+      % Position for the current bar
+      \def\xpos{\i*1} % Space out the bars
+      
+      % Loop through each segment of the current bar
+      \foreach \j in {1,...,\numsegments} {
+        \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
+        
+        % Draw the segment with random color
+        \fill[red, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
+      }
+      
+      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.05);
+    }
+  \end{tikzpicture}
 \end{frame}
 
 \begin{frame}

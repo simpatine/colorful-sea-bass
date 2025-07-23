@@ -16,6 +16,8 @@
 \usetikzlibrary{positioning, fit}
 \usepackage{tcolorbox}
 
+\setcounter{tocdepth}{2}
+
 \renewcommand{\epsilon}{\varepsilon}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
@@ -44,15 +46,19 @@
 \frametitle{Overview}
 %TODO change all
 
-\begin{itemize}
-  \item Motivation: Identifying impactful SNPs in sea bass mortality
-  \item Dataset: Genomic SNP data, mortality outcomes, and annotations
-  \item Method: Subsampling techniques with XGBoost
-  \item Results: Accuracy/F1 vs. subsampling rate
-  \item Conclusion: Subsampling preserves predictive power
-\end{itemize}
+%\begin{itemize}
+%  \item Motivation: Identifying impactful SNPs in sea bass mortality
+%  \item Dataset: Genomic SNP data, mortality outcomes, and annotations
+%  \item Method: Subsampling techniques with XGBoost
+%  \item Results: Accuracy/F1 vs. subsampling rate
+%  \item Conclusion: Subsampling preserves predictive power
+%\end{itemize}
+
+  \tableofcontents[subsectionstyle=show/show]
+
 \end{frame}
 
+\section{Introduction}
 \begin{frame}
 \frametitle{VNN and Sea Basses}
 
@@ -122,6 +128,7 @@
 \end{minipage}
 \end{frame}
 
+\section{Methodology}
 \begin{frame}{Pipeline Overview}
 \begin{figure}[htb!]
     \centering
@@ -215,6 +222,7 @@
 \end{figure}
 \end{frame}
 
+\subsection{Datasets description}
 \begin{frame}
 \frametitle{SNP Dataset Structure}
 \begin{minipage}{0.69\textwidth}
@@ -323,6 +331,7 @@ $\vdots$ & $\vdots$ \\
 \end{figure}
 \end{frame}
 
+\subsection{Subsampling techniques}
 \begin{frame}
 \frametitle{Uniform Subsampling}
 \begin{itemize}
@@ -459,6 +468,7 @@ $\vdots$ & $\vdots$ \\
         group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
     ]
 
+<<<<<<< HEAD
     \node[box, color=gray] (features) {Features \\ (SNP Matrix)};
     \node[box, color=gray, below=0.7cm of features] (annotation) {Functional \\ Annotations};
     \node[box, color=gray, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
@@ -494,6 +504,7 @@ $\vdots$ & $\vdots$ \\
     \end{tikzpicture}
 \end{figure}
 \end{frame}
+%\section{Cambio della guardia}
 %TODO add cambio della guardia / sostanza
 
 \begin{frame}
@@ -561,6 +572,7 @@ In order to limit the variance of results we impose:
 \end{itemize}
 \end{frame}
 
+\subsection{Uniform subsampling}
 \begin{frame}{Results: uniform subsampling}
 \begin{figure}[H]
     \centering
@@ -570,6 +582,7 @@ In order to limit the variance of results we impose:
 \end{figure}
 \end{frame}
 
+\subsection{Uniform over chromosomes}
 \begin{frame}{Results: uniform subsampling on each chromosome}
 \begin{figure}[H]
     \centering
@@ -579,6 +592,7 @@ In order to limit the variance of results we impose:
 \end{figure}
 \end{frame}
 
+\subsection{Annotated subsampling}
 \begin{frame}{Results: annotated subsampling (function)}
 \begin{figure}[H]
     \centering

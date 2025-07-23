@@ -431,7 +431,6 @@ $\vdots$ & $\vdots$ \\
 
 \vspace{0.3cm}
 
-%TODO change colors
 \centering
 \begin{tikzpicture}
     \def\bars{7} % Number of bars
@@ -474,7 +473,6 @@ $\vdots$ & $\vdots$ \\
         group/.style={draw, rectangle, dashed, inner sep=0.3cm, rounded corners}
     ]
 
-<<<<<<< HEAD
     \node[box, color=gray] (features) {Features \\ (SNP Matrix)};
     \node[box, color=gray, below=0.7cm of features] (annotation) {Functional \\ Annotations};
     \node[box, color=gray, below=0.7cm of annotation] (mortality) {Mortality \\ Labels};
@@ -576,6 +574,31 @@ In order to limit the variance of results we impose:
   \item Multiple runs for each pair of parameters.
   \item Comparison with \textbf{baseline results} from a "dumb" classifier, always guessing the most common class.
 \end{itemize}
+
+\centering
+\begin{tikzpicture}
+    \def\bars{4} % Number of bars
+    \def\maxheight{2} % Max height of bars
+    
+    % Loop through each bar
+    \foreach \i in {1,...,\bars} {
+      \pgfmathsetmacro{\barheight}{\maxheight} % Random height for the bar
+      \pgfmathsetmacro{\numsegments}{7/\i}
+      
+      % Position for the current bar
+      \def\xpos{\i*1} % Space out the bars
+      
+      % Loop through each segment of the current bar
+      \foreach \j in {1,...,\numsegments} {
+        \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
+        
+        % Draw the segment with random color
+        \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.3/\i);
+      }
+      
+      \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.05);
+    }
+  \end{tikzpicture}
 \end{frame}
 
 \subsection{Uniform subsampling}

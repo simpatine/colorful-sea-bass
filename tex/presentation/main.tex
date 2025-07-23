@@ -194,6 +194,7 @@ $\vdots$ & $\vdots$ \\
 \end{tabular} 
 }
 \end{minipage}
+\vspace{0.5cm}
 
 \resizebox{\textwidth}{!}{
 \begin{tabular}{c|c|c|c|c}
@@ -215,10 +216,12 @@ $\vdots$ & $\vdots$ \\
   \item Annotations include function: Promoter, Enhancer, Open Chromatin.
   \item Tissue number (0–25) indicates location-specific relevance.
 \end{itemize}
+\vspace{1cm}
+
 \centering
 \resizebox{0.6\textwidth}{!}{
 \begin{tabular}{c|c|c}
-    snp\_id & funct & n\_tissue \\
+    \textbf{snp\_id} & \textbf{funct} & \textbf{n\_tissue} \\
     \hline
     CAJNNU010000001.1:7825 & Open\_chromatin & 7 \\
     CAJNNU010000001.1:7865 & Open\_chromatin & 7 \\
@@ -322,13 +325,13 @@ $\vdots$ & $\vdots$ \\
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{comment}
 \frametitle{Subsampling Strategy Comparison}
 \begin{itemize}
   \item Trade-offs in simplicity, biological interpretability, and balance.
   \item Aim: maximize predictive power while reducing dimensionality.
 \end{itemize}
-\end{frame}
+\end{comment}
 
 \begin{frame}
 \frametitle{Control of Randomness}
@@ -337,6 +340,7 @@ In order to limit the variance of results we impose:
   \item XGBoost random seed, train-test split fixed
   \item Subsampling is the only random component varying between experiments.
 \end{itemize}
+\vspace{0.3cm}
 \centering
  \resizebox{0.8\textwidth}{!}{
     \begin{tikzpicture}[

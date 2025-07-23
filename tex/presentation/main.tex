@@ -173,11 +173,40 @@
 
 \begin{frame}
 \frametitle{SNP Dataset Structure}
+\begin{minipage}{0.69\textwidth}
 \begin{itemize}
   \item 990 rows (fish), each with 6,072,853 SNP features.
   \item SNP values: 0 (no mutation), 1 (heterozygous), 2 (homozygous alt).
   \item Each fish is paired with a mortality label.
 \end{itemize}
+\end{minipage}
+\begin{minipage}{0.28\textwidth}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{c|c}
+\textbf{id} & \textbf{mortality} \\
+\hline
+PL06-B12 & 1 \\
+PL06-B06 & 1 \\
+PL06-E06 & 1 \\
+PL08n-B05 & 0 \\
+PL08n-G09 & 0 \\
+$\vdots$ & $\vdots$ \\
+\end{tabular} 
+}
+\end{minipage}
+
+\resizebox{\textwidth}{!}{
+\begin{tabular}{c|c|c|c|c}
+    &CAJNNU010000001.1:299&CAJNNU010000001.1:903&CAJNNU010000001.1:986& \dots \\
+\hline
+    PL04-A06 & 1 & 0 & 0 & \dots \\
+    PL04-A08 & 0 & 0 & 1 & \dots \\
+    PL04-A09 & 0 & 1 & 1 & \dots \\
+    PL04-A10 & 0 & 0 & 0 & \dots \\
+    PL04-A11 & 2 & 2 & 1 & \dots \\
+    $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\ddots$
+\end{tabular}
+}
 \end{frame}
 
 \begin{frame}
@@ -186,6 +215,19 @@
   \item Annotations include function: Promoter, Enhancer, Open Chromatin.
   \item Tissue number (0–25) indicates location-specific relevance.
 \end{itemize}
+\centering
+\resizebox{0.6\textwidth}{!}{
+\begin{tabular}{c|c|c}
+    snp\_id & funct & n\_tissue \\
+    \hline
+    CAJNNU010000001.1:7825 & Open\_chromatin & 7 \\
+    CAJNNU010000001.1:7865 & Open\_chromatin & 7 \\
+    CAJNNU010000001.1:8046 & Open\_chromatin & 7 \\
+    CAJNNU010000001.1:8084 & Open\_chromatin & 7 \\
+    CAJNNU010000001.1:8116 & Open\_chromatin & 7 \\
+    $\vdots$ & $\vdots$ & $\vdots$
+\end{tabular}
+}
 \end{frame}
 
 \begin{frame}
@@ -209,7 +251,7 @@
       
       % Loop through each segment of the current bar
       \foreach \j in {1,...,\numsegments} {
-        \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.25)} % Random height for the segment
+        \pgfmathsetmacro{\segmentheight}{0.05+rnd*(\barheight-0.3)} % Random height for the segment
         
         % Draw the segment with random color
         \fill[blue, rounded corners=1pt] (\xpos, \segmentheight) rectangle (\xpos+0.5, \segmentheight+0.2);
@@ -351,16 +393,6 @@ In order to limit the variance of results we impose:
 \end{itemize}
 \end{frame}
 
-\section{Results}
-\begin{frame}{Results: testing setup}
-
-\textbf{Baseline scores:}
-In every plot we compared our scores with some "baseline scores". These baseline scores are the score of a "trivial" classifier, that always reports the most common class.
-% Our data samples were in 54.32\% of cases of one class, thus the baseline accuracy is this value.
-
-For different subsampling ratios and techniques we ran multiple instances.
-\end{frame}
-
 \begin{frame}{Results: uniform subsampling}
 \begin{figure}[H]
     \centering
@@ -384,7 +416,7 @@ For different subsampling ratios and techniques we ran multiple instances.
     \centering
     \includegraphics[width=\textwidth]{../figures/subsample_annotated.png}
     \caption{Plot of accuracy and F1 scores when subsampling uniformly on each chromosome.}
-    \label{fig:res1a}
+    \label{fig:res2a}
 \end{figure}
 \end{frame}
 

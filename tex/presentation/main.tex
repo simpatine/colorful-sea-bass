@@ -587,6 +587,7 @@ In order to limit the variance of results we impose:
   \item Comparison with \textbf{baseline results} from a "dumb" classifier, always guessing the most common class.
 \end{itemize}
 
+\vspace{0.2cm}
 \centering
 \begin{tikzpicture}
     \def\bars{4} % Number of bars
@@ -598,7 +599,7 @@ In order to limit the variance of results we impose:
       \pgfmathsetmacro{\numsegments}{7/\i}
       
       % Position for the current bar
-      \def\xpos{\i*1} % Space out the bars
+      \def\xpos{\i*1.5-1.5} % Space out the bars
       
       % Loop through each segment of the current bar
       \foreach \j in {1,...,\numsegments} {
@@ -610,6 +611,11 @@ In order to limit the variance of results we impose:
       
       \draw[thick, black, rounded corners=5pt] (\xpos, 0) rectangle (\xpos+0.5, \barheight+0.05);
     }
+
+    \draw[->] (0.6, 1) -- ++(0.8, 0);
+    \draw[->] (2.1, 1) -- ++(0.8, 0);
+    \draw[->] (3.6, 1) -- ++(0.8, 0);
+
   \end{tikzpicture}
 \end{frame}
 

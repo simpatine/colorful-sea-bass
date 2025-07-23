@@ -42,6 +42,8 @@
 
 \begin{frame}
 \frametitle{Overview}
+%TODO change all
+
 \begin{itemize}
   \item Motivation: Identifying impactful SNPs in sea bass mortality
   \item Dataset: Genomic SNP data, mortality outcomes, and annotations
@@ -91,7 +93,7 @@
 
 \begin{frame}
 \frametitle{Machine Learning Approach}
-
+%TODO change layout
   Predict if a sea bass will die by watching its genome: \textbf{Machine Learning}.
 
 \vspace{0.3cm}
@@ -171,6 +173,8 @@
 \end{figure}
 \end{frame}
 
+%TODO add pipeline only data
+
 \begin{frame}
 \frametitle{SNP Dataset Structure}
 \begin{minipage}{0.69\textwidth}
@@ -232,6 +236,8 @@ $\vdots$ & $\vdots$ \\
 \end{tabular}
 }
 \end{frame}
+
+%TODO add pipeline only subsampling
 
 \begin{frame}
 \frametitle{Uniform Subsampling}
@@ -332,6 +338,7 @@ $\vdots$ & $\vdots$ \\
 
 \vspace{0.3cm}
 
+%TODO change colors
 \centering
 \begin{tikzpicture}
     \def\bars{7} % Number of bars
@@ -365,6 +372,8 @@ $\vdots$ & $\vdots$ \\
   \item Aim: maximize predictive power while reducing dimensionality.
 \end{itemize}
 \end{comment}
+
+%TODO add cambio della guardia / sostanza
 
 \begin{frame}
 \frametitle{Control of Randomness}
@@ -422,6 +431,7 @@ In order to limit the variance of results we impose:
 \section{Results}
 \begin{frame}
 \frametitle{Subsampling Ratios and baseline results}
+%TODO visualize multiple subsampling ratios
 \begin{itemize}
     \item Subsampled with multiple $p$ values: log-spaced varying from the whole genome to few SNPs.
   \item Trained model for each combination of model and subsample rate.
@@ -449,6 +459,7 @@ In order to limit the variance of results we impose:
 \end{frame}
 
 \begin{frame}{Results: annotated subsampling (function)}
+%TODO change caption
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{../figures/subsample_annotated.png}

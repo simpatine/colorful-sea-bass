@@ -16,6 +16,8 @@
 \usetikzlibrary{positioning, fit}
 \usepackage{tcolorbox}
 
+\setcounter{tocdepth}{2}
+
 \renewcommand{\epsilon}{\varepsilon}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
@@ -44,15 +46,19 @@
 \frametitle{Overview}
 %TODO change all
 
-\begin{itemize}
-  \item Motivation: Identifying impactful SNPs in sea bass mortality
-  \item Dataset: Genomic SNP data, mortality outcomes, and annotations
-  \item Method: Subsampling techniques with XGBoost
-  \item Results: Accuracy/F1 vs. subsampling rate
-  \item Conclusion: Subsampling preserves predictive power
-\end{itemize}
+%\begin{itemize}
+%  \item Motivation: Identifying impactful SNPs in sea bass mortality
+%  \item Dataset: Genomic SNP data, mortality outcomes, and annotations
+%  \item Method: Subsampling techniques with XGBoost
+%  \item Results: Accuracy/F1 vs. subsampling rate
+%  \item Conclusion: Subsampling preserves predictive power
+%\end{itemize}
+
+  \tableofcontents[subsectionstyle=show/show]
+
 \end{frame}
 
+\section{Introduction}
 \begin{frame}
 \frametitle{VNN and Sea Basses}
 
@@ -123,7 +129,7 @@
 
 \end{frame}
 
-
+\section{Methodology}
 \begin{frame}
 \frametitle{Pipeline Overview}
 \begin{figure}[htb!]
@@ -175,6 +181,7 @@
 
 %TODO add pipeline only data
 
+\subsection{Datasets description}
 \begin{frame}
 \frametitle{SNP Dataset Structure}
 \begin{minipage}{0.69\textwidth}
@@ -239,6 +246,7 @@ $\vdots$ & $\vdots$ \\
 
 %TODO add pipeline only subsampling
 
+\subsection{Subsampling techniques}
 \begin{frame}
 \frametitle{Uniform Subsampling}
 \begin{itemize}
@@ -373,6 +381,7 @@ $\vdots$ & $\vdots$ \\
 \end{itemize}
 \end{comment}
 
+%\section{Cambio della guardia}
 %TODO add cambio della guardia / sostanza
 
 \begin{frame}
@@ -440,6 +449,7 @@ In order to limit the variance of results we impose:
 \end{itemize}
 \end{frame}
 
+\subsection{Uniform subsampling}
 \begin{frame}{Results: uniform subsampling}
 \begin{figure}[H]
     \centering
@@ -449,6 +459,7 @@ In order to limit the variance of results we impose:
 \end{figure}
 \end{frame}
 
+\subsection{Uniform over chromosomes}
 \begin{frame}{Results: uniform subsampling on each chromosome}
 \begin{figure}[H]
     \centering
@@ -458,6 +469,7 @@ In order to limit the variance of results we impose:
 \end{figure}
 \end{frame}
 
+\subsection{Annotated subsampling}
 \begin{frame}{Results: annotated subsampling (function)}
 %TODO change caption
 \begin{figure}[H]
